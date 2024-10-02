@@ -117,60 +117,45 @@ GLvoid Mouse(int button, int state, int x, int y) {
 	mouse_y = -(float)(y - (float)600 / 2.0)* (float)(1.0 / (float)(600 / 2.0));
 	std::random_device rd;
 	std::mt19937 g(rd());
-	GLclampf color;
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 		std::cout << mouse_x << mouse_y << std::endl;
 		switch (click_area(mouse_x, mouse_y)) {
 		case 1:
-			color = float((g() & 1000)) / 1000.0f;
-			rect1_r = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect1_g = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect1_b = color;
+			
+			rect1_r = float((g() & 1000)) / 1000.0f;
+			rect1_g = float((g() & 1000)) / 1000.0f;
+			rect1_b = float((g() & 1000)) / 1000.0f;
 			std::cout << "1\n";
 			break;
 
 		case 2:
-			color = float((g() & 1000)) / 1000.0f;
-			rect2_r = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect2_g = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect2_b = color;
+			rect2_r = float((g() & 1000)) / 1000.0f;
+			rect2_g = float((g() & 1000)) / 1000.0f;
+			rect2_b = float((g() & 1000)) / 1000.0f;
 			std::cout << "2\n";
 			break;
 
 
 		case 3:
-			color = float((g() & 1000)) / 1000.0f;
-			rect3_r = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect3_g = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect3_b = color;
+			rect3_r = float((g() & 1000)) / 1000.0f;
+			rect3_g = float((g() & 1000)) / 1000.0f;
+			rect3_b = float((g() & 1000)) / 1000.0f;
 			std::cout << "3\n";
 			break;
 
 
 		case 4:
-			color = float((g() & 1000)) / 1000.0f;
-			rect4_r = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect4_g = color;
-			color = float((g() & 1000)) / 1000.0f;
-			rect4_b = color;
+			rect4_r = float((g() & 1000)) / 1000.0f;
+			rect4_g = float((g() & 1000)) / 1000.0f;
+			rect4_b = float((g() & 1000)) / 1000.0f;
 			std::cout << "4\n";
 			break;
 
 
 		default:
-			color = float((g() & 1000)) / 1000.0f;
-			base_r = color;
-			color = float((g() & 1000)) / 1000.0f;
-			base_g = color;
-			color = float((g() & 1000)) / 1000.0f;
-			base_b = color;
+			base_r = float((g() & 1000)) / 1000.0f;
+			base_g = float((g() & 1000)) / 1000.0f;
+			base_b = float((g() & 1000)) / 1000.0f;
 			std::cout << "0\n";
 			break;
 
