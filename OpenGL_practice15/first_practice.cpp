@@ -18,8 +18,16 @@ std::mt19937 g_r(rd());
 
 bool timer_flag = false;
 
-clock_t timer = clock();
+void timer(int value) {
+	if (timer_flag) {
+		r = float(g_r() & 1000) / 1000.0f;
+		g = float(g_r() & 1000) / 1000.0f;
+		b = float(g_r() & 1000) / 1000.0f;
 
+	}
+	glutTimerFunc(1000, timer, 0);
+	glutPostRedisplay();
+}
 void main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
@@ -39,17 +47,14 @@ void main(int argc, char** argv) {
 	glutDisplayFunc(drawScene);
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
-	if (timer_flag) {
-		r = float(g_r() & 1000) / 1000.0f;
-		g = float(g_r() & 1000) / 1000.0f;
-		b = float(g_r() & 1000) / 1000.0f;
-	}
+	glutTimerFunc(1000, timer, 0);
 	glutMainLoop();
 
 }
 
 
 GLvoid drawScene(GLvoid) {
+	
 	glClearColor(r, g, b, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -98,16 +103,17 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 		break;
 
 	case 't':
-
+		timer_flag = true;
 		break;
 
 	case 's':
-
+		timer_flag = false;
 		break;
 
 	case 'q':
 		glutLeaveMainLoop();
 		break;
 	}
+	
 	glutPostRedisplay();
 }
