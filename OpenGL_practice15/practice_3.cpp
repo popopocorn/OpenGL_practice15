@@ -138,10 +138,10 @@ GLvoid Mouse(int button, int state, int x, int y) {
 	}
 	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
 		for (int i = 0; i < 10; ++i) {
-			if (rectangle_list[selected_rect].is_creat && rectangle_list[i].is_creat && ((rectangle_list[i].x1 < rectangle_list[selected_rect].x1 && rectangle_list[selected_rect].x1 < rectangle_list[i].x2 && rectangle_list[i].y2 < rectangle_list[selected_rect].y1 && rectangle_list[selected_rect].y1 < rectangle_list[i].y1)
-				|| (rectangle_list[i].x1 < rectangle_list[selected_rect].x1 && rectangle_list[selected_rect].x1 < rectangle_list[i].x2 && rectangle_list[i].y2 < rectangle_list[selected_rect].y2 && rectangle_list[selected_rect].y2 < rectangle_list[i].y1)
-				|| (rectangle_list[i].x1 < rectangle_list[selected_rect].x2 && rectangle_list[selected_rect].x2 < rectangle_list[i].x2 && rectangle_list[i].y2 < rectangle_list[selected_rect].y1 && rectangle_list[selected_rect].y1 < rectangle_list[i].y1)
-				|| (rectangle_list[i].x1 < rectangle_list[selected_rect].x2 && rectangle_list[selected_rect].x2 < rectangle_list[i].x2 && rectangle_list[i].y2 < rectangle_list[selected_rect].y2 && rectangle_list[selected_rect].y2 < rectangle_list[i].y1))) {
+			if (rectangle_list[selected_rect].is_creat && rectangle_list[i].is_creat && ((rectangle_list[i].x1 < rectangle_list[selected_rect].x1 && rectangle_list[selected_rect].x1 < rectangle_list[i].x2)
+				|| (rectangle_list[i].x1 < rectangle_list[selected_rect].x1 && rectangle_list[selected_rect].x2 < rectangle_list[i].x2)
+				|| (rectangle_list[i].y1 < rectangle_list[selected_rect].y1 && rectangle_list[selected_rect].y1 < rectangle_list[i].y2)
+				|| (rectangle_list[i].y1 < rectangle_list[selected_rect].y2 && rectangle_list[selected_rect].y2 < rectangle_list[i].y2))) {
 				merge_target = i;
 				is_merged = true;
 				break;
