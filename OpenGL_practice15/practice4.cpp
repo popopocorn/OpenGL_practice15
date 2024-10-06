@@ -58,7 +58,7 @@ void main(int argc, char** argv) {
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
-	glutTimerFunc(1, animation, 1);
+	glutTimerFunc(100, animation, 1);
 	
 	glutMainLoop();
 
@@ -82,23 +82,23 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
 	switch (tolower(key)) {
 	case '1':
-		
+		animation_flag = 1;
 		break;
 
 	case '2':
-		
+		animation_flag = 2;
 		break;
 
 	case '3':
-		
+		animation_flag = 3;
 		break;
 
 	case '4':
-		
+		animation_flag = 4;
 		break;
 	
 	case 's':
-		
+		animation_flag = -1;
 		break;
 
 	case 'm':
@@ -138,7 +138,35 @@ GLvoid Mouse(int button, int state, int x, int y) {
 
 
 void animation(int time) {
+	switch (animation_flag) {
+	case 1:
 
+		break;
+
+	case 2:
+
+		break;
+
+	case 3:
+
+		break;
+
+	case 4:
+		for (int i = 0; i < rect_index; ++i) {
+			rectangle_list[i].r = (float(g() % 1000)) / 1000.0f;
+			rectangle_list[i].g = (float(g() % 1000)) / 1000.0f;
+			rectangle_list[i].b = (float(g() % 1000)) / 1000.0f;
+		}
+		break;
+
+	case -1:
+
+		break;
+
+		
+	}
+	glutPostRedisplay();
+	glutTimerFunc(100, animation, 1);
 }
 
 void reset_rect_position() {
