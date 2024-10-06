@@ -4,6 +4,8 @@
 #include<gl/freeglut_ext.h>
 #include<random>
 
+#define animation_delay 50
+
 std::random_device rd;
 std::mt19937 g(rd());
 
@@ -12,7 +14,7 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
-void animation(int time);
+void animation(int value);
 
 GLclampf base_r = 0.12f;
 GLclampf base_g = 0.12f;
@@ -29,14 +31,29 @@ typedef struct rects {
 	GLclampf r{};
 	GLclampf g{};
 	GLclampf b{};
+
+	GLclampf dx = 0.05f;
+	GLclampf dy = 0.05f;
 };
 
 rects rectangle_list[5];
 int rect_index = 0;
 int animation_flag = -1;
+GLclampf change_x{};
+GLclampf change_y{};
+
+
+bool animation1_flag = false;
+bool animation2_flag = false;
+bool animation3_flag = false;
+bool animation4_flag = false;
+
+
 
 void reset_rect_position();
-
+void move_rect1(int index);
+void change_rect_size(int index);
+void move_zig_zag(int index);
 
 void main(int argc, char** argv) {
 	glutInit(&argc, argv);
@@ -58,7 +75,7 @@ void main(int argc, char** argv) {
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
-	glutTimerFunc(100, animation, 1);
+	glutTimerFunc(animation_delay, animation, 1);
 	
 	glutMainLoop();
 
@@ -82,18 +99,24 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
 	switch (tolower(key)) {
 	case '1':
+		animation1_flag = !animation1_flag;
 		animation_flag = 1;
 		break;
 
 	case '2':
+		animation2_flag = !animation2_flag;
 		animation_flag = 2;
 		break;
 
 	case '3':
+		animation3_flag = !animation3_flag;
 		animation_flag = 3;
+		change_x = float(g() % 100) / 1000.0f;
+		change_y = float(g() % 100) / 1000.0f;
 		break;
 
 	case '4':
+		animation4_flag = !animation4_flag;
 		animation_flag = 4;
 		break;
 	
@@ -136,26 +159,40 @@ GLvoid Mouse(int button, int state, int x, int y) {
 	}
 }
 
-
-void animation(int time) {
+void animation(int value) {
 	switch (animation_flag) {
 	case 1:
-
+		if(animation1_flag){
+			for (int i = 0; i < rect_index; ++i) {
+				move_rect1(i);
+			}
+		}
 		break;
 
 	case 2:
-
+		if (animation2_flag) {
+			for (int i = 0; i < rect_index; ++i) {
+				move_zig_zag(i);
+			}
+		}
 		break;
 
 	case 3:
-
+		if(animation3_flag){
+			for (int i = 0; i < rect_index; ++i) {
+				change_rect_size(i);
+			}
+		}
 		break;
 
 	case 4:
-		for (int i = 0; i < rect_index; ++i) {
-			rectangle_list[i].r = (float(g() % 1000)) / 1000.0f;
-			rectangle_list[i].g = (float(g() % 1000)) / 1000.0f;
-			rectangle_list[i].b = (float(g() % 1000)) / 1000.0f;
+		if(animation4_flag){
+			for (int i = 0; i < rect_index; ++i) {
+				rectangle_list[i].r = (float(g() % 1000)) / 1000.0f;
+				rectangle_list[i].g = (float(g() % 1000)) / 1000.0f;
+				rectangle_list[i].b = (float(g() % 1000)) / 1000.0f;
+			}
+		
 		}
 		break;
 
@@ -166,7 +203,7 @@ void animation(int time) {
 		
 	}
 	glutPostRedisplay();
-	glutTimerFunc(100, animation, 1);
+	glutTimerFunc(animation_delay, animation, 1);
 }
 
 void reset_rect_position() {
@@ -176,4 +213,36 @@ void reset_rect_position() {
 		rectangle_list[i].x2 = rectangle_list[i].center[0] + 0.05f;
 		rectangle_list[i].y2 = rectangle_list[i].center[1] - 0.05f;
 	}
+}
+
+void move_rect1(int index) {
+
+	if (rectangle_list[index].x2 > 1) {
+		rectangle_list[index].dx = -0.05f;
+	}
+	if (rectangle_list[index].x1 < -1) {
+		rectangle_list[index].dx = 0.05f;
+	}
+	if (rectangle_list[index].y1 > 1) {
+		rectangle_list[index].dy = -0.05f;
+	}
+	if (rectangle_list[index].y2 < -1) {
+		rectangle_list[index].dy = 0.05f;
+	}
+	rectangle_list[index].x1 += rectangle_list[index].dx;
+	rectangle_list[index].x2 += rectangle_list[index].dx;
+	rectangle_list[index].y1 += rectangle_list[index].dy;
+	rectangle_list[index].y2 += rectangle_list[index].dy;
+}
+
+
+void change_rect_size(int index) {
+	if(rectangle_list[index].x2 <1 &&
+		rectangle_list[index].y2 > -1){
+		rectangle_list[index].x2 += change_x;
+		rectangle_list[index].y2 -= change_y;
+	}
+}
+void move_zig_zag(int index) {
+
 }
