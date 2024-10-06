@@ -27,5 +27,13 @@
     <ClCompile Include="practice4.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="practice5.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="opengl_frame.txt">
+      <Filter>리소스 파일</Filter>
+    </Text>
   </ItemGroup>
 </Project>

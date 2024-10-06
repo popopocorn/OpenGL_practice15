@@ -34,6 +34,7 @@ typedef struct rects {
 
 	GLclampf dx = 0.05f;
 	GLclampf dy = 0.05f;
+	GLclampf acc_dx{};
 };
 
 rects rectangle_list[5];
@@ -160,48 +161,31 @@ GLvoid Mouse(int button, int state, int x, int y) {
 }
 
 void animation(int value) {
-	switch (animation_flag) {
-	case 1:
-		if(animation1_flag){
-			for (int i = 0; i < rect_index; ++i) {
-				move_rect1(i);
-			}
+	
+	if(animation1_flag){
+		for (int i = 0; i < rect_index; ++i) {
+			move_rect1(i);
 		}
-		break;
-
-	case 2:
-		if (animation2_flag) {
-			for (int i = 0; i < rect_index; ++i) {
-				move_zig_zag(i);
-			}
-		}
-		break;
-
-	case 3:
-		if(animation3_flag){
-			for (int i = 0; i < rect_index; ++i) {
-				change_rect_size(i);
-			}
-		}
-		break;
-
-	case 4:
-		if(animation4_flag){
-			for (int i = 0; i < rect_index; ++i) {
-				rectangle_list[i].r = (float(g() % 1000)) / 1000.0f;
-				rectangle_list[i].g = (float(g() % 1000)) / 1000.0f;
-				rectangle_list[i].b = (float(g() % 1000)) / 1000.0f;
-			}
-		
-		}
-		break;
-
-	case -1:
-
-		break;
-
-		
 	}
+	if (animation2_flag) {
+		for (int i = 0; i < rect_index; ++i) {
+			move_zig_zag(i);
+		}
+	}
+	if(animation3_flag){
+		for (int i = 0; i < rect_index; ++i) {
+			change_rect_size(i);
+		}
+	}
+	if(animation4_flag){
+		for (int i = 0; i < rect_index; ++i) {
+			rectangle_list[i].r = (float(g() % 1000)) / 1000.0f;
+			rectangle_list[i].g = (float(g() % 1000)) / 1000.0f;
+			rectangle_list[i].b = (float(g() % 1000)) / 1000.0f;
+		}
+	
+	}
+
 	glutPostRedisplay();
 	glutTimerFunc(animation_delay, animation, 1);
 }
@@ -244,5 +228,22 @@ void change_rect_size(int index) {
 	}
 }
 void move_zig_zag(int index) {
+	if (rectangle_list[index].acc_dx > 0.15) {
+		rectangle_list[index].dx = -0.05;
+	}
+	if (rectangle_list[index].acc_dx < -0.15) {
+		rectangle_list[index].dx = 0.05;
+	}
 
+	if (rectangle_list[index].y1 > 1) {
+		rectangle_list[index].dy = -0.05f;
+	}
+	if (rectangle_list[index].y2 < -1) {
+		rectangle_list[index].dy = 0.05f;
+	}
+	rectangle_list[index].y1 += rectangle_list[index].dy;
+	rectangle_list[index].y2 += rectangle_list[index].dy;
+	rectangle_list[index].x1 += rectangle_list[index].dx;
+	rectangle_list[index].x2 += rectangle_list[index].dx;
+	rectangle_list[index].acc_dx += rectangle_list[index].dx;
 }
