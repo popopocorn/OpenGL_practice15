@@ -18,7 +18,7 @@ GLclampf base_g = 1.0f;
 GLclampf base_b = 1.0f;
 
 void generate_rect();
-
+bool is_overlap(int, int);
 
 typedef struct random_rect {
 	bool is_creat = false;
@@ -138,10 +138,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
 	}
 	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
 		for (int i = 0; i < 10; ++i) {
-			if (rectangle_list[selected_rect].is_creat && rectangle_list[i].is_creat && ((rectangle_list[i].x1 < rectangle_list[selected_rect].x1 && rectangle_list[selected_rect].x1 < rectangle_list[i].x2)
-				|| (rectangle_list[i].x1 < rectangle_list[selected_rect].x1 && rectangle_list[selected_rect].x2 < rectangle_list[i].x2)
-				|| (rectangle_list[i].y1 < rectangle_list[selected_rect].y1 && rectangle_list[selected_rect].y1 < rectangle_list[i].y2)
-				|| (rectangle_list[i].y1 < rectangle_list[selected_rect].y2 && rectangle_list[selected_rect].y2 < rectangle_list[i].y2))) {
+			if (rectangle_list[selected_rect].is_creat && is_overlap(i, selected_rect)) {
 				merge_target = i;
 				is_merged = true;
 				break;
@@ -184,4 +181,10 @@ GLvoid change_xy(int x, int y) {
 
 	}
 	glutPostRedisplay();
+}
+
+bool is_overlap(int target, int select) {
+	if (rectangle_list[target].x1 < rectangle_list[select].x1 && rectangle_list[select].x1 < rectangle_list[target].x2) {
+
+	}
 }
