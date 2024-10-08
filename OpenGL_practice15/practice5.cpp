@@ -32,6 +32,7 @@ random_rect rectangle_list[41];
 
 void reset();
 void merge(int);
+bool is_overlap(int, int);
 
 bool is_reset = false;
 
@@ -125,7 +126,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
 	GLclampf mouse_x = (float)(x - (float)800 / 2.0) * (float)(1.0 / (float)(800 / 2.0));
 	GLclampf mouse_y = -(float)(y - (float)600 / 2.0) * (float)(1.0 / (float)(600 / 2.0));
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-		rectangle_list[40] = { true, mouse_x - erase_width, mouse_y + erase_heigh, mouse_x + erase_width, mouse_y - erase_heigh};
+		rectangle_list[40] = { true, mouse_x - erase_width, mouse_y + erase_heigh, mouse_x + erase_width, mouse_y - erase_heigh, 0.0f, 0.0f, 0.0f};
 		is_drag = true;
 	}
 	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
@@ -143,11 +144,8 @@ GLvoid Motion(int x, int y) {
 		rectangle_list[40].y1 = mouse_y + erase_heigh;
 		rectangle_list[40].x2 = mouse_x + erase_width;
 		rectangle_list[40].y2 = mouse_y - erase_heigh;
-		for (int i = 0; i < 10; ++i) {
-			if (rectangle_list[40].is_creat && rectangle_list[i].is_creat && ((rectangle_list[i].x1 < rectangle_list[40].x1 && rectangle_list[40].x1 < rectangle_list[i].x2)
-				|| (rectangle_list[i].x1 < rectangle_list[40].x1 && rectangle_list[40].x2 < rectangle_list[i].x2)
-				|| (rectangle_list[i].y1 < rectangle_list[40].y1 && rectangle_list[40].y1 < rectangle_list[i].y2)
-				|| (rectangle_list[i].y1 < rectangle_list[40].y2 && rectangle_list[40].y2 < rectangle_list[i].y2))) {
+		for (int i = 0; i < 40; ++i) {
+			if (rectangle_list[40].is_creat && rectangle_list[i].is_creat && is_overlap(i,40)) {
 				merge(i);
 				break;
 			}
@@ -158,12 +156,23 @@ GLvoid Motion(int x, int y) {
 }
 
 void merge(int target_index) {
-	/*rectangle_list[target_index].is_creat = false;
+	rectangle_list[target_index].is_creat = false;
 	erase_width += 0.025f;
 	erase_heigh += 0.025f;
 	rectangle_list[40].r = rectangle_list[target_index].r;
 	rectangle_list[40].g = rectangle_list[target_index].g;
 	rectangle_list[40].b = rectangle_list[target_index].b;
-	*/
+	
 	std::cout << "merge" << target_index << std::endl;
+}
+bool is_overlap(int target, int select) {
+	random_rect rect1 = rectangle_list[target];
+	random_rect rect2 = rectangle_list[select];
+
+	if (rect1.x2 < rect2.x1 || rect1.x1 > rect2.x2 ||
+		rect1.y2 > rect2.y1 || rect1.y1 < rect2.y2) {
+		return false;
+	}
+
+	return true;
 }
