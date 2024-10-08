@@ -27,7 +27,7 @@ void timer(int value) {
 	}
 	glutTimerFunc(1000, timer, 0);
 	glutPostRedisplay();
-}
+}	
 void main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);

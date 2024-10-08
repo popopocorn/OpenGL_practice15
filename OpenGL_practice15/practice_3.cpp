@@ -119,14 +119,14 @@ int merge_target = -1;
 
 GLclampf offset_x, offset_y;
 
-
+bool is_merged = false;
 GLvoid Mouse(int button, int state, int x, int y) {
 	GLclampf mouse_x = (float)(x - (float)800 / 2.0) * (float)(1.0 / (float)(800 / 2.0));
 	GLclampf mouse_y = -(float)(y - (float)600 / 2.0) * (float)(1.0 / (float)(600 / 2.0));
-	bool is_merged = false;
+	
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
 		for (int cur = 0; cur < 10; ++cur) {
-			if (rectangle_list[cur].x1 < mouse_x && mouse_x < rectangle_list[cur].x2 && rectangle_list[cur].y2 < mouse_y && mouse_y < rectangle_list[cur].y1) {
+			if (rectangle_list[cur].is_creat && (rectangle_list[cur].x1 < mouse_x && mouse_x < rectangle_list[cur].x2 && rectangle_list[cur].y2 < mouse_y && mouse_y < rectangle_list[cur].y1)) {
 				is_drag = true;
 				selected_rect = cur;
 				offset_x = mouse_x - rectangle_list[cur].x1;
@@ -138,10 +138,10 @@ GLvoid Mouse(int button, int state, int x, int y) {
 	}
 	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
 		for (int i = 0; i < 10; ++i) {
-			if (rectangle_list[selected_rect].is_creat && is_overlap(i, selected_rect)) {
+		
+			if (i!=selected_rect && rectangle_list[i].is_creat && is_overlap(i, selected_rect)) {
 				merge_target = i;
 				is_merged = true;
-				break;
 
 			}
 		}
@@ -155,12 +155,12 @@ GLvoid Mouse(int button, int state, int x, int y) {
 			rectangle_list[merge_target].g = (float(g() % 1000)) / 1000.0;
 			rectangle_list[merge_target].b = (float(g() % 1000)) / 1000.0;
 			rectangle_list[selected_rect].is_creat=false;
-			
+			std::swap(rectangle_list[selected_rect], rectangle_list[9]);
 		}
-		merge_target = -1;
+
 		is_merged = false;
 		is_drag = false;
-		selected_rect = -1;
+
 	}
 	
 	glutPostRedisplay();
@@ -184,7 +184,13 @@ GLvoid change_xy(int x, int y) {
 }
 
 bool is_overlap(int target, int select) {
-	if (rectangle_list[target].x1 < rectangle_list[select].x1 && rectangle_list[select].x1 < rectangle_list[target].x2) {
+	random_rect rect1 = rectangle_list[target];
+	random_rect rect2 = rectangle_list[select];
 
+	if (rect1.x2 < rect2.x1 || rect1.x1 > rect2.x2 ||
+		rect1.y2 > rect2.y1 || rect1.y1 < rect2.y2) {
+		return false; 
 	}
+
+	return true;
 }
