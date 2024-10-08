@@ -34,7 +34,6 @@ void reset();
 void merge(int);
 bool is_overlap(int, int);
 
-bool is_reset = false;
 
 GLclampf erase_width{};
 GLclampf erase_heigh{};
@@ -61,10 +60,9 @@ void main(int argc, char** argv) {
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
 	glutMotionFunc(Motion);
-	if(not is_reset) {
-		reset();
-		is_reset = true;
-	}
+
+	reset();
+	
 	glutMainLoop();
 
 }
@@ -90,7 +88,7 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'r':
-		is_reset = false;
+		reset();
 		break;
 
 	case 'q':
