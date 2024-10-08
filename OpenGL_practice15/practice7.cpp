@@ -120,7 +120,24 @@ void make_fragmentShaders() {
 GLuint make_shaderProgram() {
 	GLuint shaderID = glCreateProgram();
 	glAttachShader(shaderID, vertexShader);
-	
+	glAttachShader(shaderID, fragmentShader);
+
+	glLinkProgram(shaderID);
+
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+
+	GLint result;
+	GLchar errorLog[512];
+
+
+	glGetProgramiv(shaderID, GL_LINK_STATUS, &result); // ---세이더가 잘 연결되었는지 체크하기
+	if (!result) {
+		glGetProgramInfoLog(shaderID, 512, NULL, errorLog);
+		std::cerr << "ERROR: shader program 연결 실패\n" << errorLog << std::endl;
+		return false;
+	}
+
 	
 	
 	

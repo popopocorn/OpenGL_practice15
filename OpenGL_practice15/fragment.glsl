@@ -1,9 +1,8 @@
 #version 330 core
 
-out vec4 color;
-
-
 void main(){
-	color = vecr(1.0, 0.0, 0.0, 1.0);
+	const vec4 vertex[3]=vec4[3]
+
+	gl_Position = vertex[gl_VertexID];
 
 }
