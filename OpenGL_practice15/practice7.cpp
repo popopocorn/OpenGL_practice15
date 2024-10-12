@@ -42,7 +42,7 @@ int r_count;
 typedef struct shapes {
     std::vector<GLclampf> vertices;
     GLclampf r, g, b;    
-    int shape_index = -1;
+    char shape_{};
 };
 
 shapes shape_list[10];
@@ -152,19 +152,19 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         break;
 
     case 'w':
-
+        move(key);
         break;
 
     case 'a':
-
+        move(key);
         break;
 
     case 's':
-
+        move(key);
         break;
 
     case 'd':
-
+        move(key);
         break;
 
     case 'c':
@@ -280,7 +280,7 @@ void create_point() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, p_count};
+    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'p' };
     std::cout << shape_list[list_index].vertices[0];
     float vertex_data[6] = { shape_list[list_index].vertices[0],shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b };
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
@@ -295,7 +295,7 @@ void create_line() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, l_count};
+    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'l'};
     std::cout << shape_list[list_index].vertices[0];
     float line_data[12] = {
         shape_list[list_index].vertices[0], shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
@@ -312,7 +312,7 @@ void create_tri() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, t_count};
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 't'};
     std::cout << shape_list[list_index].vertices[0];
 
     float triangl_data[18] = {
@@ -332,7 +332,7 @@ void create_rect() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, r_count};
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 'r'};
     std::cout << shape_list[list_index].vertices[0];
 
     float rectangle_data[24] = {
@@ -377,23 +377,81 @@ void clear_buffer() {
 }
 
 void move(char key) {
-    int target_shape = g() % 4;
-    int targe_index;
-    switch (target_shape) {
-    case 0:
-        targe_index = g() % p_count;
+    float dx{};
+    float dy{};
+    switch (key) {
+    case'w':
+        dy = 0.1f;
         break;
 
-    case 1:
-        targe_index = g() % l_count;
+    case'a':
+        dx = -0.1f;
         break;
 
-    case 2:
-        targe_index = g() % t_count;
+    case's':
+        dy = -0.1f;
         break;
 
-    case 3:
-        targe_index = g() % r_count;
+    case'd':
+        dx = 0.1f;
+        break;
+
+    }
+
+
+
+    int target_ = g() % list_index;
+
+    shape_list[target_].vertices[0] += dx;
+    shape_list[target_].vertices[1] += dy;
+
+    switch (shape_list[target_].shape_){
+    case 'p':
+    {
+        float vertex_data[6] = { shape_list[target_].vertices[0],shape_list[target_].vertices[1], shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b };
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertex_data) * target_, sizeof(vertex_data), vertex_data);
+        break;
+    }
+
+    case 'l':
+    {
+        float line_data[12] = {
+            shape_list[target_].vertices[0], shape_list[target_].vertices[1], shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
+            shape_list[target_].vertices[0] + 0.1f , shape_list[target_].vertices[1] - 0.1f, shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(line_data) * target_, sizeof(line_data), line_data);
+    }
+
+        break;
+
+    case 't':
+    {
+        float triangl_data[18] = {
+            shape_list[target_].vertices[0],shape_list[target_].vertices[1], shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
+            shape_list[target_].vertices[0] - 0.1f,shape_list[target_].vertices[1] - 0.2f, shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
+            shape_list[target_].vertices[0] + 0.1f,shape_list[target_].vertices[1] - 0.2f, shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b
+
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(triangl_data) * target_, sizeof(triangl_data), triangl_data);
+    }
+
+        break;
+
+    case 'r':
+    {
+        float rectangle_data[24] = {
+        shape_list[target_].vertices[0],shape_list[target_].vertices[1], shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
+        shape_list[target_].vertices[0] + 0.1f,shape_list[target_].vertices[1], shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
+        shape_list[target_].vertices[0] + 0.1f,shape_list[target_].vertices[1] - 0.1f, shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
+        shape_list[target_].vertices[0],shape_list[target_].vertices[1] - 0.1f, shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
+        };
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(rectangle_data) * target_, sizeof(rectangle_data), rectangle_data);
+    }
+
         break;
 
     }
