@@ -43,16 +43,19 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <None Include="vertex.glsl">
-      <Filter>리소스 파일</Filter>
-    </None>
-    <None Include="fragment.glsl">
-      <Filter>리소스 파일</Filter>
-    </None>
+    <ClInclude Include="file_open.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="file_read.h">
-      <Filter>소스 파일</Filter>
-    </ClInclude>
+    <None Include="07_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="07_Vertex_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
 </Project>

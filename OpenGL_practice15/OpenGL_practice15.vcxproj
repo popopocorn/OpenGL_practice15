@@ -152,11 +152,12 @@
     <Text Include="opengl_frame.txt" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="fragment.glsl" />
-    <None Include="vertex.glsl" />
+    <ClInclude Include="file_open.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="file_read.h" />
+    <None Include="07_Fragment_shader.glsl" />
+    <None Include="07_Vertex_shader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
