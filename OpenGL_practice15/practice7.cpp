@@ -41,7 +41,7 @@ int r_count;
 
 typedef struct shapes {
     std::vector<GLclampf> vertices;
-    GLclampf r, g, b;    
+    GLclampf r, g, b;
     char shape_{};
 };
 
@@ -61,34 +61,34 @@ void clear_buffer();
 void move(char);
 //------------------------------------------------------
 void main(int argc, char** argv) {
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
-	glutInitWindowPosition(0, 0);
-	glutInitWindowSize(width, height);
-	glutCreateWindow("Example1");
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
+    glutInitWindowPosition(0, 0);
+    glutInitWindowSize(width, height);
+    glutCreateWindow("Example1");
 
-	glewExperimental = GL_TRUE;
+    glewExperimental = GL_TRUE;
     glewInit();
 
     make_vertex_shader();
     make_fragment_shader();
     shader_program = make_shader();
 
-	glutDisplayFunc(drawScene);
-	glutReshapeFunc(Reshape);
-	glutKeyboardFunc(Keyboard);
+    glutDisplayFunc(drawScene);
+    glutReshapeFunc(Reshape);
+    glutKeyboardFunc(Keyboard);
 
     init_buffer();
 
-	glutMainLoop();
+    glutMainLoop();
 
 }
 
 
 GLvoid drawScene(GLvoid) {
 
-	glClearColor(base_r, base_g, base_b, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+    glClearColor(base_r, base_g, base_b, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shader_program);
 
@@ -100,33 +100,33 @@ GLvoid drawScene(GLvoid) {
     glDrawArrays(GL_POINTS, 0, p_count);
 
     glBindVertexArray(VAO[1]);
-    
-    glDrawArrays(GL_LINES, 0, 2*l_count);
+
+    glDrawArrays(GL_LINES, 0, 2 * l_count);
 
     glBindVertexArray(VAO[2]);
     glDrawArrays(GL_TRIANGLES, 0, 3 * t_count);
 
     glBindVertexArray(VAO[3]);
-    
-    glDrawElements(GL_TRIANGLES, 6*r_count, GL_UNSIGNED_INT,0);
 
-                
-
-    
+    glDrawElements(GL_TRIANGLES, 6 * r_count, GL_UNSIGNED_INT, 0);
 
 
-	glutSwapBuffers();
+
+
+
+
+    glutSwapBuffers();
 }
 GLvoid Reshape(int w, int h) {
-	glViewport(0, 0, w, h);
+    glViewport(0, 0, w, h);
 
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
-	switch (key) {
+    switch (key) {
     case 'p':
-        if(list_index<10)
+        if (list_index < 10)
             create_point();
-        
+
         ++p_count;
         break;
 
@@ -140,7 +140,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     case 't':
         if (list_index < 10)
             create_tri();
-        
+
         ++t_count;
         break;
 
@@ -171,12 +171,12 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         clear_buffer();
         break;
 
-	case 'q':
-		glutLeaveMainLoop();
-		break;
-	}
-    
-	glutPostRedisplay();
+    case 'q':
+        glutLeaveMainLoop();
+        break;
+    }
+
+    glutPostRedisplay();
 }
 
 void make_vertex_shader() {
@@ -253,13 +253,13 @@ GLuint make_shader() {
 }
 
 GLvoid init_buffer() {
-    for (int i = 0; i < 4;++i) {
+    for (int i = 0; i < 4; ++i) {
         glGenVertexArrays(1, &VAO[i]);
         glBindVertexArray(VAO[i]);
 
         glGenBuffers(1, &VBO[i]);
         glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 10*(i+1), nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 10 * (i + 1), nullptr, GL_STATIC_DRAW);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
@@ -295,11 +295,11 @@ void create_line() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'l'};
+    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'l' };
     std::cout << shape_list[list_index].vertices[0];
     float line_data[12] = {
         shape_list[list_index].vertices[0], shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
-        shape_list[list_index].vertices[0] + 0.1f , shape_list[list_index].vertices[1]-0.1f, shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b
+        shape_list[list_index].vertices[0] + 0.1f , shape_list[list_index].vertices[1] - 0.1f, shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b
     };
     glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(line_data) * l_count, sizeof(line_data), line_data);
@@ -312,7 +312,7 @@ void create_tri() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 't'};
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 't' };
     std::cout << shape_list[list_index].vertices[0];
 
     float triangl_data[18] = {
@@ -332,7 +332,7 @@ void create_rect() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 'r'};
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 'r' };
     std::cout << shape_list[list_index].vertices[0];
 
     float rectangle_data[24] = {
@@ -405,7 +405,7 @@ void move(char key) {
     shape_list[target_].vertices[0] += dx;
     shape_list[target_].vertices[1] += dy;
 
-    switch (shape_list[target_].shape_){
+    switch (shape_list[target_].shape_) {
     case 'p':
     {
         float vertex_data[6] = { shape_list[target_].vertices[0],shape_list[target_].vertices[1], shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b };
@@ -424,7 +424,7 @@ void move(char key) {
         glBufferSubData(GL_ARRAY_BUFFER, sizeof(line_data) * target_, sizeof(line_data), line_data);
     }
 
-        break;
+    break;
 
     case 't':
     {
@@ -438,7 +438,7 @@ void move(char key) {
         glBufferSubData(GL_ARRAY_BUFFER, sizeof(triangl_data) * target_, sizeof(triangl_data), triangl_data);
     }
 
-        break;
+    break;
 
     case 'r':
     {
@@ -452,7 +452,7 @@ void move(char key) {
         glBufferSubData(GL_ARRAY_BUFFER, sizeof(rectangle_data) * target_, sizeof(rectangle_data), rectangle_data);
     }
 
-        break;
+    break;
 
     }
 
