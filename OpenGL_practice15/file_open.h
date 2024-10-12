@@ -24,7 +24,7 @@ char* file_to_buf(const char* file_name) {
     fclose(file);
 
 
-    std::cout << shaderSource << std::endl;
+    //std::cout << shaderSource << std::endl;
 
     return shaderSource;
 }

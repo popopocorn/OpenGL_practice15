@@ -3,27 +3,63 @@
 #include<gl/freeglut.h>
 #include<gl/freeglut_ext.h>
 #include"file_open.h"
-
+#include<random>
+#include<vector>
+//미리 선언할거
 #define vertex_shader_code "07_vertex_shader.glsl"
 #define fragment_shader_code "07_fragment_shader.glsl"
+std::random_device rd;
+std::mt19937 g(rd());
 
-
+//------------------------------------------------------
+//콜백함수
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
+//------------------------------------------------------
+//셰이더 용 선언
+GLuint shader_program;
+GLuint vertexShader;
+GLuint fragmentShader;
+GLuint VAO[4], VBO[4], EBO;
 
 void make_vertex_shader();
 void make_fragment_shader();
 GLuint make_shader();
-
-GLclampf base_r = 0.0f;
-GLclampf base_g = 0.0f;
+GLvoid init_buffer();
+//------------------------------------------------------
+//전역변수
+GLclampf base_r = 1.0f;
+GLclampf base_g = 1.0f;
 GLclampf base_b = 1.0f;
-GLint width{ 500 }, height{ 500 };
-GLuint shader_program;
-GLuint vertexShader;
-GLuint fragmentShader;
+GLint width{ 800 }, height{ 600 };
 
+int p_count;
+int l_count;
+int t_count;
+int r_count;
+
+typedef struct shapes {
+    std::vector<GLclampf> vertices;
+    GLclampf r, g, b;    
+    int shape_index = -1;
+};
+
+shapes shape_list[10];
+int list_index{};
+unsigned int vertex_index_list[10][6];
+
+
+//------------------------------------------------------
+//필요한 함수 선언
+void create_point();
+void create_line();
+void create_tri();
+void create_rect();
+void update_vertex_buffer();
+void clear_buffer();
+void move(char);
+//------------------------------------------------------
 void main(int argc, char** argv) {
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
@@ -42,6 +78,8 @@ void main(int argc, char** argv) {
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
 
+    init_buffer();
+
 	glutMainLoop();
 
 }
@@ -56,8 +94,25 @@ GLvoid drawScene(GLvoid) {
 
     glValidateProgram(shader_program);
 
-    glPointSize(5.0);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glBindVertexArray(VAO[0]);
+    glPointSize(10.0);
+    glDrawArrays(GL_POINTS, 0, p_count);
+
+    glBindVertexArray(VAO[1]);
+    
+    glDrawArrays(GL_LINES, 0, 2*l_count);
+
+    glBindVertexArray(VAO[2]);
+    glDrawArrays(GL_TRIANGLES, 0, 3 * t_count);
+
+    glBindVertexArray(VAO[3]);
+    
+    glDrawElements(GL_TRIANGLES, 6*r_count, GL_UNSIGNED_INT,0);
+
+                
+
+    
 
 
 	glutSwapBuffers();
@@ -68,12 +123,59 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
 	switch (key) {
+    case 'p':
+        if(list_index<10)
+            create_point();
+        
+        ++p_count;
+        break;
+
+    case 'l':
+        if (list_index < 10)
+            create_line();
+
+        ++l_count;
+        break;
+
+    case 't':
+        if (list_index < 10)
+            create_tri();
+        
+        ++t_count;
+        break;
+
+    case 'r':
+        if (list_index < 10)
+            create_rect();
+
+        ++r_count;
+        break;
+
+    case 'w':
+
+        break;
+
+    case 'a':
+
+        break;
+
+    case 's':
+
+        break;
+
+    case 'd':
+
+        break;
+
+    case 'c':
+        clear_buffer();
+        break;
 
 	case 'q':
 		glutLeaveMainLoop();
 		break;
 	}
-
+    
 	glutPostRedisplay();
 }
 
@@ -147,5 +249,154 @@ GLuint make_shader() {
     glUseProgram(shader01);
 
     return shader01;
+
+}
+
+GLvoid init_buffer() {
+    for (int i = 0; i < 4;++i) {
+        glGenVertexArrays(1, &VAO[i]);
+        glBindVertexArray(VAO[i]);
+
+        glGenBuffers(1, &VBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 10*(i+1), nullptr, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+    }
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 6 * 10, nullptr, GL_STATIC_DRAW);
+
+}
+
+void create_point() {
+    float x = float(g() % 2000) / 1000.0f - 1.0f;
+    float y = float(g() % 2000) / 1000.0f - 1.0f;
+    float r = float(g() % 1000) / 1000.0f;
+    float _g = float(g() % 1000) / 1000.0f;
+    float b = float(g() % 1000) / 1000.0f;
+    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, p_count};
+    std::cout << shape_list[list_index].vertices[0];
+    float vertex_data[6] = { shape_list[list_index].vertices[0],shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b };
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertex_data) * p_count, sizeof(vertex_data), vertex_data);
+
+    ++list_index;
+}
+
+void create_line() {
+    float x = float(g() % 2000) / 1000.0f - 1.0f;
+    float y = float(g() % 2000) / 1000.0f - 1.0f;
+    float r = float(g() % 1000) / 1000.0f;
+    float _g = float(g() % 1000) / 1000.0f;
+    float b = float(g() % 1000) / 1000.0f;
+    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, l_count};
+    std::cout << shape_list[list_index].vertices[0];
+    float line_data[12] = {
+        shape_list[list_index].vertices[0], shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
+        shape_list[list_index].vertices[0] + 0.1f , shape_list[list_index].vertices[1]-0.1f, shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b
+    };
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(line_data) * l_count, sizeof(line_data), line_data);
+    ++list_index;
+}
+
+void create_tri() {
+    float x1 = float(g() % 2000) / 1000.0f - 1.0f;
+    float y1 = float(g() % 2000) / 1000.0f - 1.0f;
+    float r = float(g() % 1000) / 1000.0f;
+    float _g = float(g() % 1000) / 1000.0f;
+    float b = float(g() % 1000) / 1000.0f;
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, t_count};
+    std::cout << shape_list[list_index].vertices[0];
+
+    float triangl_data[18] = {
+            shape_list[list_index].vertices[0],shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
+            shape_list[list_index].vertices[0] - 0.1f,shape_list[list_index].vertices[1] - 0.2f, shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
+            shape_list[list_index].vertices[0] + 0.1f,shape_list[list_index].vertices[1] - 0.2f, shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b
+
+    };
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(triangl_data) * t_count, sizeof(triangl_data), triangl_data);
+    ++list_index;
+}
+
+void create_rect() {
+    float x1 = float(g() % 2000) / 1000.0f - 1.0f;
+    float y1 = float(g() % 2000) / 1000.0f - 1.0f;
+    float r = float(g() % 1000) / 1000.0f;
+    float _g = float(g() % 1000) / 1000.0f;
+    float b = float(g() % 1000) / 1000.0f;
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, r_count};
+    std::cout << shape_list[list_index].vertices[0];
+
+    float rectangle_data[24] = {
+            shape_list[list_index].vertices[0],shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
+            shape_list[list_index].vertices[0] + 0.1f,shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
+            shape_list[list_index].vertices[0] + 0.1f,shape_list[list_index].vertices[1] - 0.1f, shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
+            shape_list[list_index].vertices[0],shape_list[list_index].vertices[1] - 0.1f, shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
+    };
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(rectangle_data) * r_count, sizeof(rectangle_data), rectangle_data);
+    vertex_index_list[r_count][0] = 4 * r_count; //4 8 12 16..
+    vertex_index_list[r_count][1] = 4 * r_count + 2; //5, 9 13 17
+    vertex_index_list[r_count][2] = 4 * r_count + 1;
+    vertex_index_list[r_count][3] = 4 * r_count;
+    vertex_index_list[r_count][4] = 4 * r_count + 3;
+    vertex_index_list[r_count][5] = 4 * r_count + 2;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(vertex_index_list[r_count]) * r_count, sizeof(vertex_index_list[r_count]), vertex_index_list[r_count]);
+    ++list_index;
+}
+
+void update_vertex_buffer() {
+
+}
+
+void clear_buffer() {
+
+    for (int i = 0; i < 4; ++i) {
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 10 * (i + 1), nullptr, GL_STATIC_DRAW);
+    }
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * 6 * 10, nullptr, GL_STATIC_DRAW);
+
+
+    p_count = 0;
+    l_count = 0;
+    t_count = 0;
+    r_count = 0;
+    list_index = 0;
+}
+
+void move(char key) {
+    int target_shape = g() % 4;
+    int targe_index;
+    switch (target_shape) {
+    case 0:
+        targe_index = g() % p_count;
+        break;
+
+    case 1:
+        targe_index = g() % l_count;
+        break;
+
+    case 2:
+        targe_index = g() % t_count;
+        break;
+
+    case 3:
+        targe_index = g() % r_count;
+        break;
+
+    }
+
 
 }

@@ -153,7 +153,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="file_open.h" />
-    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="07_Fragment_shader.glsl" />
