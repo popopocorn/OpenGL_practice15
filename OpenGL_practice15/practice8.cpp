@@ -16,6 +16,7 @@ std::mt19937 g(rd());
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
+GLvoid Mouse(int button, int state, int x, int y);
 //------------------------------------------------------
 //셰이더 용 선언
 GLuint shader_program;
@@ -43,7 +44,7 @@ typedef struct shapes {
 
 //------------------------------------------------------
 //필요한 함수 선언
-
+int click_area(GLclampf x, GLclampf y);
 
 
 //------------------------------------------------------
@@ -192,4 +193,27 @@ GLvoid init_buffer() {
 
 
 
+}
+
+GLvoid Mouse(int button, int state, int x, int y) {
+    GLclampf mouse_x = (float)(x - (float)width / 2.0) * (float)(1.0 / (float)(width / 2.0));
+    GLclampf mouse_y = -(float)(y - (float)height / 2.0) * (float)(1.0 / (float)(height / 2.0));
+
+}
+
+int click_area(GLclampf x, GLclampf y) {
+  
+    if (-1 < x && x < 0 && 0 < y && y < 1) {
+        return 1;
+    }
+    else if (0 < x && x < 1 && 0 < y && y < 1) {
+        return 2;
+    }
+    else if (-1 < x && x < 0 && -1 < y && y < 0) {
+        return 3;
+    }
+    else if (0 < x && x < 1 && -1 < y && y < 0) {
+        return 4;
+    }
+    return 0;
 }
