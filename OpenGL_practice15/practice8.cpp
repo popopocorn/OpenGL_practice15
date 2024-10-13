@@ -42,10 +42,12 @@ typedef struct shapes {
 };
 
 
+
 //------------------------------------------------------
 //필요한 함수 선언
 int click_area(GLclampf x, GLclampf y);
-
+void create_tri(int, GLclampf, GLclampf);
+void init_tri();
 
 //------------------------------------------------------
 void main(int argc, char** argv) {
@@ -82,7 +84,7 @@ GLvoid drawScene(GLvoid) {
 
     glValidateProgram(shader_program);
 
-
+    glBindVertexArray(VAO);
 
 
 
@@ -183,7 +185,7 @@ GLvoid init_buffer() {
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 10, nullptr, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 3 * 4, nullptr, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -198,7 +200,11 @@ GLvoid init_buffer() {
 GLvoid Mouse(int button, int state, int x, int y) {
     GLclampf mouse_x = (float)(x - (float)width / 2.0) * (float)(1.0 / (float)(width / 2.0));
     GLclampf mouse_y = -(float)(y - (float)height / 2.0) * (float)(1.0 / (float)(height / 2.0));
-
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        int clicked = click_area(mouse_x, mouse_y);
+        create_tri(clicked, mouse_x, mouse_y);
+    }
+    
 }
 
 int click_area(GLclampf x, GLclampf y) {
@@ -216,4 +222,12 @@ int click_area(GLclampf x, GLclampf y) {
         return 4;
     }
     return 0;
+}
+
+void create_tri(int clicke_area, GLclampf x, GLclampf y) {
+
+}
+
+void init_tri() {
+
 }
