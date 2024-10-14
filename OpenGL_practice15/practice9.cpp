@@ -133,19 +133,19 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case '1' :
-
+        bounce();
         break;
 
     case '2':
-
+        zigzag();
         break;
 
     case '3':
-
+        square_spiral();
         break;
 
     case '4':
-
+        circle_spiral();
         break;
 
     case 'a':
