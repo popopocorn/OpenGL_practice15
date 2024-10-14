@@ -67,6 +67,7 @@ void main(int argc, char** argv) {
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
+    glutMouseFunc(Mouse);
 
     init_buffer();
 
@@ -202,6 +203,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
     GLclampf mouse_y = -(float)(y - (float)height / 2.0) * (float)(1.0 / (float)(height / 2.0));
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         int clicked = click_area(mouse_x, mouse_y);
+        std::cout << click_area(mouse_x, mouse_y);
         create_tri(clicked, mouse_x, mouse_y);
     }
     
@@ -210,18 +212,18 @@ GLvoid Mouse(int button, int state, int x, int y) {
 int click_area(GLclampf x, GLclampf y) {
   
     if (-1 < x && x < 0 && 0 < y && y < 1) {
-        return 1;
+        return 0;
     }
     else if (0 < x && x < 1 && 0 < y && y < 1) {
-        return 2;
+        return 1;
     }
     else if (-1 < x && x < 0 && -1 < y && y < 0) {
-        return 3;
+        return 2;
     }
     else if (0 < x && x < 1 && -1 < y && y < 0) {
-        return 4;
+        return 3;
     }
-    return 0;
+
 }
 
 void create_tri(int clicke_area, GLclampf x, GLclampf y) {
@@ -230,4 +232,7 @@ void create_tri(int clicke_area, GLclampf x, GLclampf y) {
 
 void init_tri() {
 
+
+
+    GLclampf x1;
 }
