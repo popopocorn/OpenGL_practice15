@@ -26,7 +26,7 @@ GLvoid Mouse(int button, int state, int x, int y);
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO[6], VBO[6];
+GLuint VAO[5], VBO[5];
 
 // 스파이럴 구조체
 typedef struct spiral {
@@ -36,13 +36,11 @@ typedef struct spiral {
 
 std::vector<spiral> spiralPointsCom; // 스파이럴 점들을 저장할 벡터
 
-bool is_line = false;
-
 void make_vertex_shader();
 void make_fragment_shader();
 GLuint make_shader();
 GLvoid init_buffer();
-void make_spiral(float centerX, float centerY, int turns, bool clockwise, int what);
+void make_spiral(float centerX, float centerY, int turns, bool clockwise);
 
 //------------------------------------------------------
 int main(int argc, char** argv) {
@@ -74,24 +72,11 @@ GLvoid drawScene(GLvoid) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shader_program);
-    if (is_line) {
-        for (int i = 0; i < 6; ++i) {
+    glBindVertexArray(VAO[0]);
 
-            glBindVertexArray(VAO[i]);
-
-            glDrawArrays(GL_LINE_STRIP, 0, spiralPointsCom.size());
-
-        }
-    }
-    else {
-        for (int i = 0; i < 6; ++i) {
-
-            glBindVertexArray(VAO[i]);
-
-            glDrawArrays(GL_POINTS, 0, spiralPointsCom.size());
-
-        }
-    }
+    // 데이터 전송
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(spiral) * spiralPointsCom.size(), spiralPointsCom.data());
+    glDrawArrays(GL_POINTS, 0, spiralPointsCom.size());
 
     glutSwapBuffers();
 }
@@ -101,25 +86,8 @@ GLvoid Reshape(int w, int h) {
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y) {
-    std::cout << key;
-    switch (key) {
-    case 'p':
-        is_line = false;
-        break;
-
-    case 'l':
-        is_line = true;
-        break;
-
-    case 'q':
+    if (key == 'q') {
         glutLeaveMainLoop();
-        break;
-    }
-    float temp_x = float(g() % 2000)/1000.0f-1.0f;
-    float temp_y = float(g() % 2000) / 1000.0f - 1.0f;
-
-    if (1 <= key && key <= 5) {
-        make_spiral(temp_x, temp_y, 3, false, key);
     }
     glutPostRedisplay();
 }
@@ -176,79 +144,67 @@ GLuint make_shader() {
 }
 
 GLvoid init_buffer() {
-    for (int i =0;i<6;++i){
-        glGenVertexArrays(1, &VAO[i]);
-        glBindVertexArray(VAO[i]);
+    glGenVertexArrays(1, &VAO[0]);
+    glBindVertexArray(VAO[0]);
 
-        glGenBuffers(1, &VBO[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-        glBufferData(GL_ARRAY_BUFFER, 600 * sizeof(spiral), nullptr, GL_DYNAMIC_DRAW);
+    glGenBuffers(1, &VBO[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, 600 * sizeof(spiral), nullptr, GL_DYNAMIC_DRAW);
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(spiral), (void*)0);
-        glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(spiral), (void*)0);
+    glEnableVertexAttribArray(0);
 
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(spiral), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-    }
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(spiral), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 }
 
-void make_spiral(float centerX, float centerY, int turns, bool clockwise, int what) {
-    const int pointsPerTurn = 50;
+void make_spiral(float centerX, float centerY, int turns, bool clockwise) {
+    const int pointsPerTurn = 100;
     float angleIncrement = (2.0f * M_PI) / pointsPerTurn;
     float radius = 0.0f;
-    if (what == 0)
-        return;
-    std::vector<spiral> spiralPoints; 
 
+    std::vector<spiral> spiralPoints;  // 스파이럴 점들을 저장할 벡터
 
+    // 첫 번째 스파이럴: 안에서 밖으로
     for (int i = 0; i < turns * pointsPerTurn; ++i) {
         float angle = i * angleIncrement;
         if (clockwise) {
-            angle = -angle; 
+            angle = -angle;  // 시계 방향
         }
 
-        radius += 0.001f; 
+        radius += 0.001f;  // 반지름 증가 폭
         float x = centerX + radius * cos(angle);
         float y = centerY + radius * sin(angle);
 
-   
-        spiralPoints.push_back({ x, y, 0.0f, 1.0f, 0.0f, 0.0f });
+        // 점을 벡터에 저장
+        spiralPoints.push_back({ x, y, 0.0f, 1.0f, 0.0f, 0.0f }); // z, r, g, b를 포함하여 저장
     }
 
- 
-    spiral lastPoint = spiralPoints.back();  
+    // 첫 번째 스파이럴의 마지막 점을 기준으로 대칭 그리기
+    spiral lastPoint = spiralPoints.back();  // 마지막 점
 
- 
+    // 대칭된 점을 저장할 벡터
     std::vector<spiral> symmetricSpiralPoints;
 
- 
+    // 두 번째 스파이럴: 마지막 점을 기준으로 대칭
     for (const auto& point : spiralPoints) {
-        float x_symmetric = lastPoint.x - (point.x - lastPoint.x);
-        float y_symmetric = lastPoint.y - (point.y - lastPoint.y);
+        float x_symmetric = lastPoint.x - (point.x - lastPoint.x);  // X 대칭
+        float y_symmetric = lastPoint.y - (point.y - lastPoint.y);  // Y 대칭
 
-
-        symmetricSpiralPoints.push_back({ x_symmetric, y_symmetric, 0.0f, 1.0f, 0.0f, 0.0f });
+        // 대칭된 점을 새 벡터에 저장
+        symmetricSpiralPoints.push_back({ x_symmetric, y_symmetric, 0.0f, 1.0f, 0.0f, 0.0f }); // 대칭된 점 저장
     }
 
- 
+    // 원래 스파이럴 점과 대칭된 점을 결합
     spiralPointsCom = spiralPoints;
     spiralPointsCom.insert(spiralPointsCom.end(), symmetricSpiralPoints.begin(), symmetricSpiralPoints.end());
-    if(what == 6){
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[5]);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(spiral) * spiralPointsCom.size(), spiralPointsCom.data());
-    }
-    else {
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[what-1]);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(spiral) * spiralPointsCom.size(), spiralPointsCom.data());
-        make_spiral(float(g() % 2000) / 1000.0f - 1.0f, float(g() % 2000) / 1000.0f - 1.0f, 3, true, what - 1);
-    }
 }
 
 GLvoid Mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         GLclampf mouse_x = (float)(x - (float)800 / 2.0) * (float)(1.0 / (float)(800 / 2.0));
         GLclampf mouse_y = -(float)(y - (float)600 / 2.0) * (float)(1.0 / (float)(600 / 2.0));
-        make_spiral(mouse_x, mouse_y, 3, true, 6);
+        make_spiral(mouse_x, mouse_y, 3, true);
         glutPostRedisplay();
     }
 }
