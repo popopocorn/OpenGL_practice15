@@ -43,8 +43,9 @@ GLint width{ 800 }, height{ 600 };
 typedef struct triangle {
     std::vector<GLclampf> vertices;
     GLclampf r, g, b;
-    float dx{0.01f}, dy{0.01f};
-    bool is_rotate = false;
+    float dx{0.01f}, dy{-0.01f};
+    float acc_dx{};
+    float acc_dy{};
     float angl{};
 };
 
@@ -408,10 +409,18 @@ void update(int) {
             tri_list[i].vertices[7] += tri_list[i].dy;
 
 
+
+            float centerX = (tri_list[i].vertices[0] + tri_list[i].vertices[3] + tri_list[i].vertices[6]) / 3.0f;
+            float centerY = (tri_list[i].vertices[1] + tri_list[i].vertices[4] + tri_list[i].vertices[7]) / 3.0f;
+
+    
             glm::mat4 rotate_mat = glm::rotate(glm::mat4(1.0f), glm::radians(tri_list[i].angl), glm::vec3(0.0f, 0.0f, 1.0f));
-            glm::vec4 transformed1 = rotate_mat * glm::vec4(tri_list[i].vertices[0], tri_list[i].vertices[1], 0.0f, 1.0f);
-            glm::vec4 transformed2 = rotate_mat * glm::vec4(tri_list[i].vertices[3], tri_list[i].vertices[4], 0.0f, 1.0f);
-            glm::vec4 transformed3 = rotate_mat * glm::vec4(tri_list[i].vertices[6], tri_list[i].vertices[7], 0.0f, 1.0f);
+
+
+            glm::vec4 transformed1 = rotate_mat * glm::vec4(tri_list[i].vertices[0] - centerX, tri_list[i].vertices[1] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed2 = rotate_mat * glm::vec4(tri_list[i].vertices[3] - centerX, tri_list[i].vertices[4] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed3 = rotate_mat * glm::vec4(tri_list[i].vertices[6] - centerX, tri_list[i].vertices[7] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+
 
             float tri_vertex1[18] = {
                 transformed1.x, transformed1.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
@@ -422,15 +431,130 @@ void update(int) {
 
             glBindBuffer(GL_ARRAY_BUFFER, VBO);
             glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri_vertex1) * i, sizeof(tri_vertex1), tri_vertex1);
+
         }
+        break;
     }
-    break;
+    
     case 2:
     {
-       
-    }
-     break;
+        for (int i = 0; i < 4; ++i) {
+            
+            tri_list[i].acc_dx += tri_list[i].dx;
+            if (tri_list[i].vertices[0] < -1 || tri_list[i].vertices[0] > 1
+                || tri_list[i].vertices[3] < -1 || tri_list[i].vertices[3] > 1
+                || tri_list[i].vertices[6] < -1 || tri_list[i].vertices[6] > 1) {
+                tri_list[i].dx *= -1;
+                tri_list[i].angl += 10.0f;
+                
+            }
+            if (tri_list[i].vertices[1] < -1 || tri_list[i].vertices[1] > 1
+                || tri_list[i].vertices[4] < -1 || tri_list[i].vertices[4] > 1
+                || tri_list[i].vertices[7] < -1 || tri_list[i].vertices[7] > 1) {
+                tri_list[i].dy *= -1;
+                tri_list[i].angl += 10.0f;
+            }
+            if (tri_list[i].acc_dx < -0.1f || tri_list[i].acc_dx > 0.1f) {
+                tri_list[i].dx *= -1;
+            }
 
+            tri_list[i].vertices[0] += tri_list[i].dx;
+            tri_list[i].vertices[1] += tri_list[i].dy;
+            tri_list[i].vertices[3] += tri_list[i].dx;
+            tri_list[i].vertices[4] += tri_list[i].dy;
+            tri_list[i].vertices[6] += tri_list[i].dx;
+            tri_list[i].vertices[7] += tri_list[i].dy;
+
+
+
+            float centerX = (tri_list[i].vertices[0] + tri_list[i].vertices[3] + tri_list[i].vertices[6]) / 3.0f;
+            float centerY = (tri_list[i].vertices[1] + tri_list[i].vertices[4] + tri_list[i].vertices[7]) / 3.0f;
+
+    
+            glm::mat4 rotate_mat = glm::rotate(glm::mat4(1.0f), glm::radians(tri_list[i].angl), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
+            glm::vec4 transformed1 = rotate_mat * glm::vec4(tri_list[i].vertices[0] - centerX, tri_list[i].vertices[1] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed2 = rotate_mat * glm::vec4(tri_list[i].vertices[3] - centerX, tri_list[i].vertices[4] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed3 = rotate_mat * glm::vec4(tri_list[i].vertices[6] - centerX, tri_list[i].vertices[7] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+
+
+            float tri_vertex1[18] = {
+                transformed1.x, transformed1.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed2.x, transformed2.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed3.x, transformed3.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+            };
+
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri_vertex1) * i, sizeof(tri_vertex1), tri_vertex1);
+
+        }
+        break;
+    }
+     
+    case 3: {
+        for (int i = 0; i < 4; ++i) {
+
+            tri_list[i].acc_dx += tri_list[i].dx;
+            tri_list[i].acc_dy += tri_list[i].dy;
+            if (tri_list[i].vertices[0] < -1 || tri_list[i].vertices[0] > 1
+                || tri_list[i].vertices[3] < -1 || tri_list[i].vertices[3] > 1
+                || tri_list[i].vertices[6] < -1 || tri_list[i].vertices[6] > 1) {
+                tri_list[i].dx *= -1;
+                tri_list[i].angl += 10.0f;
+
+            }
+            if (tri_list[i].vertices[1] < -1 || tri_list[i].vertices[1] > 1
+                || tri_list[i].vertices[4] < -1 || tri_list[i].vertices[4] > 1
+                || tri_list[i].vertices[7] < -1 || tri_list[i].vertices[7] > 1) {
+                tri_list[i].dy *= -1;
+                tri_list[i].angl += 10.0f;
+            }
+            if (tri_list[i].acc_dx < -0.1f || tri_list[i].acc_dx > 0.1f) {
+                tri_list[i].dx *= -1;
+            }
+            if (tri_list[i].acc_dy < -0.1f || tri_list[i].acc_dy > 0.1f) {
+                tri_list[i].dy *= -1;
+            }
+            tri_list[i].vertices[0] += tri_list[i].dx;
+            tri_list[i].vertices[1] += tri_list[i].dy;
+            tri_list[i].vertices[3] += tri_list[i].dx;
+            tri_list[i].vertices[4] += tri_list[i].dy;
+            tri_list[i].vertices[6] += tri_list[i].dx;
+            tri_list[i].vertices[7] += tri_list[i].dy;
+
+
+
+            float centerX = (tri_list[i].vertices[0] + tri_list[i].vertices[3] + tri_list[i].vertices[6]) / 3.0f;
+            float centerY = (tri_list[i].vertices[1] + tri_list[i].vertices[4] + tri_list[i].vertices[7]) / 3.0f;
+
+
+            glm::mat4 rotate_mat = glm::rotate(glm::mat4(1.0f), glm::radians(tri_list[i].angl), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
+            glm::vec4 transformed1 = rotate_mat * glm::vec4(tri_list[i].vertices[0] - centerX, tri_list[i].vertices[1] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed2 = rotate_mat * glm::vec4(tri_list[i].vertices[3] - centerX, tri_list[i].vertices[4] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed3 = rotate_mat * glm::vec4(tri_list[i].vertices[6] - centerX, tri_list[i].vertices[7] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+
+
+            float tri_vertex1[18] = {
+                transformed1.x, transformed1.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed2.x, transformed2.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed3.x, transformed3.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+            };
+
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri_vertex1) * i, sizeof(tri_vertex1), tri_vertex1);
+
+        }
+        break;
+    }
+    case 4: {
+
+        break;
+    }
     }
 
     glutPostRedisplay(); 
