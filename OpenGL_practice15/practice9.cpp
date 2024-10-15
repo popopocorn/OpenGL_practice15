@@ -2,11 +2,14 @@
 #include<gl/glew.h>
 #include<gl/freeglut.h>
 #include<gl/freeglut_ext.h>
+#include<gl/glm/glm.hpp>
+#include<gl/glm/ext.hpp>
+#include<gl/glm/gtc/matrix_transform.hpp>
 #include"file_open.h"
 #include<random>
 #include<vector>
 //미리 선언할거
-#define vertex_shader_code "09_vertex_shader.glsl"
+#define vertex_shader_code "07_vertex_shader.glsl"
 #define fragment_shader_code "07_fragment_shader.glsl"
 std::random_device rd;
 std::mt19937 g(rd());
@@ -40,8 +43,9 @@ GLint width{ 800 }, height{ 600 };
 typedef struct triangle {
     std::vector<GLclampf> vertices;
     GLclampf r, g, b;
-    float dx{}, dy{};
-
+    float dx{0.01f}, dy{0.01f};
+    bool is_rotate = false;
+    float angl{};
 };
 
 int motion_type{};
@@ -66,7 +70,6 @@ unsigned int index_buffer[] = {
     11, 9
 };
 
-bool is_face = true;
 
 
 //------------------------------------------------------
@@ -123,13 +126,10 @@ GLvoid drawScene(GLvoid) {
 
     glBindVertexArray(VAO);
 
-    if (is_face) {
 
-        glDrawArrays(GL_TRIANGLES, 0, 12);
-    }
-    else {
-        glDrawElements(GL_LINES, 24, GL_UNSIGNED_INT, 0);
-    }
+    glDrawArrays(GL_TRIANGLES, 0, 12);
+
+    
 
 
     glutSwapBuffers();
@@ -141,35 +141,38 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case '1' :
-        motion_type = 1;
+        if (motion_type != 1)
+            motion_type = 1;
+        else
+            motion_type = 0;
         break;
 
     case '2':
-        motion_type = 2;
+        if (motion_type != 2)
+            motion_type = 2;
+        else
+            motion_type = 0;
         break;
 
     case '3':
-        motion_type = 3;
+        if (motion_type != 3)
+            motion_type = 3;
+        else
+            motion_type = 0;
         break;
 
     case '4':
-        motion_type = 4;
-        break;
-
-    case 'a':
-        is_face = true;
-
-        break;
-
-    case 'b':
-        is_face = false;
+        if (motion_type != 4)
+            motion_type = 4;
+        else
+            motion_type = 0;
         break;
 
     case 'q':
         glutLeaveMainLoop();
         break;
     }
-
+    std::cout << motion_type << std::endl;
     glutPostRedisplay();
 }
 
@@ -378,12 +381,58 @@ void init_tri() {
 }
 
 void update(int) {
-    float time_value = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
-    glUseProgram(shader_program);
-    glUniform1f(glGetUniformLocation(shader_program, "time"), time_value);
-    glUniform1i(glGetUniformLocation(shader_program, "motion_type"), motion_type);
-    
-    glutPostRedisplay();
-    glutTimerFunc(1000 / 60, update, 0);
+    switch (motion_type) {
+    case 1:
+    {
+        for (int i = 0; i < 4; ++i) {
 
+            if (tri_list[i].vertices[0] < -1 || tri_list[i].vertices[0] > 1
+                || tri_list[i].vertices[3] < -1 || tri_list[i].vertices[3] > 1
+                || tri_list[i].vertices[6] < -1 || tri_list[i].vertices[6] > 1) {
+                tri_list[i].dx *= -1;
+                tri_list[i].angl += 10.0f;
+            }
+            if (tri_list[i].vertices[1] < -1 || tri_list[i].vertices[1] > 1
+                || tri_list[i].vertices[4] < -1 || tri_list[i].vertices[4] > 1
+                || tri_list[i].vertices[7] < -1 || tri_list[i].vertices[7] > 1) {
+                tri_list[i].dy *= -1;
+                tri_list[i].angl += 10.0f;
+            }
+
+
+            tri_list[i].vertices[0] += tri_list[i].dx;
+            tri_list[i].vertices[1] += tri_list[i].dy;
+            tri_list[i].vertices[3] += tri_list[i].dx;
+            tri_list[i].vertices[4] += tri_list[i].dy;
+            tri_list[i].vertices[6] += tri_list[i].dx;
+            tri_list[i].vertices[7] += tri_list[i].dy;
+
+
+            glm::mat4 rotate_mat = glm::rotate(glm::mat4(1.0f), glm::radians(tri_list[i].angl), glm::vec3(0.0f, 0.0f, 1.0f));
+            glm::vec4 transformed1 = rotate_mat * glm::vec4(tri_list[i].vertices[0], tri_list[i].vertices[1], 0.0f, 1.0f);
+            glm::vec4 transformed2 = rotate_mat * glm::vec4(tri_list[i].vertices[3], tri_list[i].vertices[4], 0.0f, 1.0f);
+            glm::vec4 transformed3 = rotate_mat * glm::vec4(tri_list[i].vertices[6], tri_list[i].vertices[7], 0.0f, 1.0f);
+
+            float tri_vertex1[18] = {
+                transformed1.x, transformed1.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed2.x, transformed2.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed3.x, transformed3.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+            };
+
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri_vertex1) * i, sizeof(tri_vertex1), tri_vertex1);
+        }
+    }
+    break;
+    case 2:
+    {
+       
+    }
+     break;
+
+    }
+
+    glutPostRedisplay(); 
+    glutTimerFunc(16, update, 0); 
 }
