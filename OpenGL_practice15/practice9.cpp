@@ -17,6 +17,8 @@ GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
+void update(int);
+
 //------------------------------------------------------
 //셰이더 용 선언
 GLuint shader_program;
@@ -39,7 +41,10 @@ typedef struct triangle {
     std::vector<GLclampf> vertices;
     GLclampf r, g, b;
     float dx{}, dy{};
+
 };
+
+int motion_type{};
 
 triangle tri_list[4];
 
@@ -95,6 +100,9 @@ void main(int argc, char** argv) {
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
     glutMouseFunc(Mouse);
+    glutTimerFunc(1000 / 60, update, 0);
+    
+
 
     init_buffer();
     init_tri();
@@ -133,19 +141,19 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case '1' :
-        bounce();
+        motion_type = 1;
         break;
 
     case '2':
-        zigzag();
+        motion_type = 2;
         break;
 
     case '3':
-        square_spiral();
+        motion_type = 3;
         break;
 
     case '4':
-        circle_spiral();
+        motion_type = 4;
         break;
 
     case 'a':
@@ -167,8 +175,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 
 void make_vertex_shader() {
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    GLchar* vertexSource;
-    vertexSource = file_to_buf(vertex_shader_code);
+    GLchar* vertexSource = file_to_buf(vertex_shader_code);
     glShaderSource(vertexShader, 1, &vertexSource, NULL);
     glCompileShader(vertexShader);
 
@@ -299,10 +306,14 @@ void create_tri(int clicked_area, GLclampf x, GLclampf y) {
         x - 0.1f, y - 0.1f, 0.0f, tri_r, tri_g, tri_b,
         x + 0.1f, y - 0.1f, 0.0f, tri_r, tri_g, tri_b,
     };
-    tri_list[clicked_area].vertices = { x,y };
+    tri_list[clicked_area].vertices = { 
+        tri_vertex1[0], tri_vertex1[1], tri_vertex1[2], 
+        tri_vertex1[6], tri_vertex1[7], tri_vertex1[8], 
+        tri_vertex1[12], tri_vertex1[13], tri_vertex1[14], };
     tri_list[clicked_area].r = tri_r;
     tri_list[clicked_area].g = tri_g;
     tri_list[clicked_area].b = tri_b;
+    
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri_vertex1) * clicked_area, sizeof(tri_vertex1), tri_vertex1);
 
@@ -351,7 +362,10 @@ void init_tri() {
             x[i] - 0.1f, y[i] - 0.2f, 0.0f, tri_r, tri_g, tri_b,
             x[i] + 0.1f, y[i] - 0.2f, 0.0f, tri_r, tri_g, tri_b,
         };
-        tri_list[i].vertices = { x[i], y[i] };
+        tri_list[i].vertices = { 
+            tri_vertex1[0], tri_vertex1[1], tri_vertex1[2], 
+            tri_vertex1[6], tri_vertex1[7], tri_vertex1[8], 
+            tri_vertex1[12], tri_vertex1[13], tri_vertex1[14], };
         tri_list[i].r = tri_r;
         tri_list[i].g = tri_g;
         tri_list[i].b = tri_b;
@@ -360,5 +374,16 @@ void init_tri() {
 
     }
 
+
+}
+
+void update(int) {
+    float time_value = glutGet(GLUT_ELAPSED_TIME) / 1000.0f;
+    glUseProgram(shader_program);
+    glUniform1f(glGetUniformLocation(shader_program, "time"), time_value);
+    glUniform1i(glGetUniformLocation(shader_program, "motion_type"), motion_type);
+    
+    glutPostRedisplay();
+    glutTimerFunc(1000 / 60, update, 0);
 
 }

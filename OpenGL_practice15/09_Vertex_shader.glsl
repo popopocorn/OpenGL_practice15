@@ -5,19 +5,32 @@ layout (location = 1) in vec3 in_color;
 out vec3 out_color;
 
 uniform float time;
+uniform int motion_type;
 
-uniform float dx;
-uniform float dy;
-
+float dx;
+float dy;
 
 void main()
 {
-    vec3 moved_pos=vPos;
+    switch(motion_type){
+    case 1:
+        
+        break;
 
-    moved_pos.x += dx*time;
-    moved_pos.y += dy*time;
+    case 2:
+        
+        break;
 
-    gl_Position = vec4(moved_pos.x, moved_pos.y, moved_pos.z, 1.0);
+    case 3: 
+        
+        break;
 
-    out_color= in_color;
+    case 4:
+        
+        break;
+    
+    
+    }
+
+    out_color = in_color;
 }
