@@ -1,57 +1,65 @@
-#include <iostream>
-#include <GL/glew.h>
-#include <GL/freeglut.h>
-#include <GL/freeglut_ext.h>
-#include <random>
-#include <vector>
-#include <math.h>
-#include "file_open.h"
-// 미리 선언할거
+#include<iostream>
+#include<gl/glew.h>
+#include<gl/freeglut.h>
+#include<gl/freeglut_ext.h>
+#include"file_open.h"
+#include<random>
+#include<vector>
+#include<cmath>
+//미리 선언할거
 #define vertex_shader_code "07_vertex_shader.glsl"
 #define fragment_shader_code "07_fragment_shader.glsl"
-
-const float M_PI = 3.14159265;
-
 std::random_device rd;
 std::mt19937 g(rd());
 
 //------------------------------------------------------
-// 콜백함수
+//콜백함수
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
 GLvoid Mouse(int button, int state, int x, int y);
+void update(int);
 //------------------------------------------------------
-// 셰이더 용 선언
+//셰이더 용 선언
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO[6], VBO[6];
-
-// 스파이럴 구조체
-typedef struct spiral {
-    float x, y, z; // 위치
-    float r, g, b; // 색상
-};
-
-std::vector<spiral> spiralPointsCom; // 스파이럴 점들을 저장할 벡터
-
-bool is_line = false;
+GLuint VAO, VBO;
 
 void make_vertex_shader();
 void make_fragment_shader();
 GLuint make_shader();
 GLvoid init_buffer();
-void make_spiral(float centerX, float centerY, int turns, bool clockwise, int what);
-void draw_spiral(int);
+//------------------------------------------------------
+//전역변수
+GLclampf base_r = 1.0f;
+GLclampf base_g = 1.0f;
+GLclampf base_b = 1.0f;
+GLint width{ 800 }, height{ 600 };
+
+typedef struct spiral_vertex {
+    std::vector<GLclampf> vertices;
+    GLclampf r, g, b;
+    float dx{ 0.01f }, dy{ -0.01f };
+};
+
+int sp_point = 0; // 현재 점의 수
+bool drawing = false; // 나선을 그리기 시작할지 여부
+float mouse_x = 0.0f; // 클릭한 x 좌표
+float mouse_y = 0.0f; // 클릭한 y 좌표
+int spiral_count;
+//------------------------------------------------------
+//필요한 함수 선언
+void draw_spiral(float m_x, float m_y);
+
 
 //------------------------------------------------------
-int main(int argc, char** argv) {
+void main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA);
     glutInitWindowPosition(0, 0);
-    glutInitWindowSize(800, 600);
-    glutCreateWindow("Spiral Animation");
+    glutInitWindowSize(width, height);
+    glutCreateWindow("Example1");
 
     glewExperimental = GL_TRUE;
     glewInit();
@@ -67,31 +75,22 @@ int main(int argc, char** argv) {
 
     init_buffer();
 
+    glutTimerFunc(1000 / 60, update, 0); // 타이머 시작
+
     glutMainLoop();
 }
 
-//------------------------------------------------------
+
 GLvoid drawScene(GLvoid) {
+    glClearColor(base_r, base_g, base_b, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(shader_program);
-    if (is_line) {
-        for (int i = 0; i < 6; ++i) {
+    glBindVertexArray(VAO);
 
-            glBindVertexArray(VAO[i]);
-
-            glDrawArrays(GL_LINE_STRIP, 0, spiralPointsCom.size());
-
-        }
-    }
-    else {
-        for (int i = 0; i < 6; ++i) {
-
-            glBindVertexArray(VAO[i]);
-
-            glDrawArrays(GL_POINTS, 0, spiralPointsCom.size());
-
-        }
+    if (sp_point > 0) {
+        glPointSize(5.0);
+        glDrawArrays(GL_POINTS, 0, sp_point * (spiral_count+1)); // 생성된 점을 그린다.
     }
 
     glutSwapBuffers();
@@ -102,27 +101,21 @@ GLvoid Reshape(int w, int h) {
 }
 
 GLvoid Keyboard(unsigned char key, int x, int y) {
-    std::cout << key;
     switch (key) {
-    case 'p':
-        is_line = false;
-        break;
-
-    case 'l':
-        is_line = true;
-        break;
-
     case 'q':
         glutLeaveMainLoop();
         break;
     }
-    float temp_x = float(g() % 2000)/1000.0f-1.0f;
-    float temp_y = float(g() % 2000) / 1000.0f - 1.0f;
-
-    if (1 <= key && key <= 5) {
-        make_spiral(temp_x, temp_y, 3, false, key);
-    }
     glutPostRedisplay();
+}
+
+GLvoid Mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        mouse_x = (float)(x - (float)width / 2.0) * (float)(1.0 / (float)(width / 2.0));
+        mouse_y = -(float)(y - (float)height / 2.0) * (float)(1.0 / (float)(height / 2.0));
+        sp_point = 0; // 클릭 시 점 초기화
+        drawing = true; // 그리기 시작
+    }
 }
 
 void make_vertex_shader() {
@@ -138,6 +131,9 @@ void make_vertex_shader() {
         glGetShaderInfoLog(vertexShader, 512, NULL, errorLog);
         std::cerr << "ERROR: vertex shader 컴파일 실패\n" << errorLog << std::endl;
         return;
+    }
+    else {
+        std::cout << "컴파일 성공\n";
     }
 }
 
@@ -155,108 +151,86 @@ void make_fragment_shader() {
         std::cerr << "ERROR: fragment shader 컴파일 실패\n" << errorLog << std::endl;
         return;
     }
+    else {
+        std::cout << "컴파일 성공\n";
+    }
 }
 
 GLuint make_shader() {
-    GLuint shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
+    GLuint shader01 = glCreateProgram();
+    glAttachShader(shader01, vertexShader);
+    glAttachShader(shader01, fragmentShader);
+    glLinkProgram(shader01);
 
     GLint result;
     GLchar errorLog[512];
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &result);
+    glGetProgramiv(shader01, GL_LINK_STATUS, &result);
     if (!result) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, errorLog);
+        glGetProgramInfoLog(shader01, 512, NULL, errorLog);
         std::cerr << "셰이더 생성 실패\n" << errorLog << std::endl;
     }
+    else {
+        std::cout << "\n컴파일 성공\n";
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+    }
 
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    return shaderProgram;
+    glUseProgram(shader01);
+    return shader01;
 }
 
 GLvoid init_buffer() {
-    for (int i =0;i<6;++i){
-        glGenVertexArrays(1, &VAO[i]);
-        glBindVertexArray(VAO[i]);
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
 
-        glGenBuffers(1, &VBO[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-        glBufferData(GL_ARRAY_BUFFER, 600 * sizeof(spiral), nullptr, GL_DYNAMIC_DRAW);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2 * 1000, nullptr, GL_DYNAMIC_DRAW); // 동적 버퍼 설정
 
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(spiral), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(spiral), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-    }
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 }
 
-void make_spiral(float centerX, float centerY, int turns, bool clockwise, int what) {
-    const int pointsPerTurn = 50;
-    float angleIncrement = (2.0f * M_PI) / pointsPerTurn;
-    float radius = 0.0f;
-    if (what == 0)
-        return;
-    std::vector<spiral> spiralPoints; 
-
-
-    for (int i = 0; i < turns * pointsPerTurn; ++i) {
-        float angle = i * angleIncrement;
-        if (clockwise) {
-            angle = -angle; 
-        }
-
-        radius += 0.001f; 
-        float x = centerX + radius * cos(angle);
-        float y = centerY + radius * sin(angle);
-
-   
-        spiralPoints.push_back({ x, y, 0.0f, 1.0f, 0.0f, 0.0f });
+// 타이머 업데이트 함수
+void update(int) {
+    if (drawing) {
+        draw_spiral(mouse_x, mouse_y); // 나선 그리기
     }
 
- 
-    spiral lastPoint = spiralPoints.back();  
-
- 
-    std::vector<spiral> symmetricSpiralPoints;
-
- 
-    for (const auto& point : spiralPoints) {
-        float x_symmetric = lastPoint.x - (point.x - lastPoint.x);
-        float y_symmetric = lastPoint.y - (point.y - lastPoint.y);
-
-
-        symmetricSpiralPoints.push_back({ x_symmetric, y_symmetric, 0.0f, 1.0f, 0.0f, 0.0f });
-    }
-
- 
-    spiralPointsCom = spiralPoints;
-    spiralPointsCom.insert(spiralPointsCom.end(), symmetricSpiralPoints.begin(), symmetricSpiralPoints.end());
-    if(what == 6){
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[5]);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(spiral) * spiralPointsCom.size(), spiralPointsCom.data());
-    }
-    else {
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[what-1]);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(spiral) * spiralPointsCom.size(), spiralPointsCom.data());
-        make_spiral(float(g() % 2000) / 1000.0f - 1.0f, float(g() % 2000) / 1000.0f - 1.0f, 3, true, what - 1);
-    }
+    glutPostRedisplay();
+    glutTimerFunc(1000 / 60, update, 0);
 }
+float last_x;
+float last_y;
+void draw_spiral(float m_x, float m_y) {
+    if(sp_point < 126){
+        float theta = sp_point * 0.1f;
+        float r = 0.1f * exp(0.1f * theta);
+        float x = r * cos(theta) + m_x;
+        float y = r * sin(theta) + m_y;
 
-GLvoid Mouse(int button, int state, int x, int y) {
-    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
-        GLclampf mouse_x = (float)(x - (float)800 / 2.0) * (float)(1.0 / (float)(800 / 2.0));
-        GLclampf mouse_y = -(float)(y - (float)600 / 2.0) * (float)(1.0 / (float)(600 / 2.0));
-        make_spiral(mouse_x, mouse_y, 3, true, 6);
-        glutPostRedisplay();
+        // VBO에 점 추가
+        float sp_vertex[2] = { x, y };
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * sp_point, sizeof(sp_vertex), sp_vertex);
+        sp_point++; // 점 수 증가
+        last_x = x;
+        last_y = y;
     }
-}
+    else if(sp_point<252){
+        float theta = sp_point * 0.1f;
+        float r = 0.1f * exp(-0.1f * theta);
+        float x = -r * cos(theta) + last_x;
+        float y = r * sin(theta) + last_y;
 
-void draw_spiral(int) {
-    int temp{};
-    for (const auto& point : spiralPointsCom) {
-        
+        // VBO에 점 추가
+        float sp_vertex[2] = { x, y };
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * sp_point, sizeof(sp_vertex), sp_vertex);
+        sp_point++; // 점 수 증가
+        last_x = x;
+        last_y = y;
     }
+    
+    
 }

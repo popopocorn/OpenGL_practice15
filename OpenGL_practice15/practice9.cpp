@@ -46,7 +46,11 @@ typedef struct triangle {
     float dx{0.01f}, dy{-0.01f};
     float acc_dx{};
     float acc_dy{};
+    float max_x{0.5f};
+    float max_y{0.5f};
+    int line{};
     float angl{};
+
 };
 
 int motion_type{};
@@ -71,18 +75,16 @@ unsigned int index_buffer[] = {
     11, 9
 };
 
+const float a = 1.0f;
+const float k = 0.1f;
 
+int sp_point{ };
 
 //------------------------------------------------------
 //필요한 함수 선언
 int click_area(GLclampf x, GLclampf y);
 void create_tri(int, GLclampf, GLclampf);
 void init_tri();
-
-void bounce();
-void zigzag();
-void square_spiral();
-void circle_spiral();
 
 
 //------------------------------------------------------
@@ -180,6 +182,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
             motion_type = 4;
         else
             motion_type = 0;
+        sp_point = 0;
         break;
 
     case 'q':
@@ -509,14 +512,65 @@ void update(int) {
     case 3: {
         for (int i = 0; i < 4; ++i) {
             
+            tri_list[i].acc_dx += tri_list[i].dx;
+            tri_list[i].acc_dy += tri_list[i].dy;
+            switch (tri_list[i].line) {
+            case 0: {
+                if (tri_list[i].acc_dx < tri_list[i].max_x * -1) {
+                    tri_list[i].dx = 0;
+                    tri_list[i].dy = -0.01f;
+                    tri_list[i].line += 1;
+                }
+                break;
+            }
+            case 1: {
+                if (tri_list[i].acc_dy < tri_list[i].max_y * -1) {
+                    tri_list[i].dy = 0;
+                    tri_list[i].dx = 0.01f;
+                    tri_list[i].line += 1;
+                }
+                break;
+            }
+            case 2: {
+                if (tri_list[i].acc_dx > tri_list[i].max_x) {
+                    tri_list[i].dx = 0;
+                    tri_list[i].dy = 0.01f;
+                    tri_list[i].line += 1;
+                }
+                break;
+            }
+            case 3: {
+                if (tri_list[i].acc_dy > tri_list[i].max_y) {
+                    tri_list[i].dx = -0.01f;
+                    tri_list[i].dy = 0;
+                    tri_list[i].line =0;
+                    tri_list[i].max_x -= 0.1f;
+                    tri_list[i].max_y -= 0.1f;
+                }
+                break;
+            }
+            }
+            
+            if (tri_list[i].vertices[0] < -1 || tri_list[i].vertices[0] > 1
+                || tri_list[i].vertices[3] < -1 || tri_list[i].vertices[3] > 1
+                || tri_list[i].vertices[6] < -1 || tri_list[i].vertices[6] > 1) {
 
+                tri_list[i].angl += 10.0f;
+
+            }
+            if (tri_list[i].vertices[1] < -1 || tri_list[i].vertices[1] > 1
+                || tri_list[i].vertices[4] < -1 || tri_list[i].vertices[4] > 1
+                || tri_list[i].vertices[7] < -1 || tri_list[i].vertices[7] > 1) {
+
+                tri_list[i].angl += 10.0f;
+            }
             tri_list[i].vertices[0] += tri_list[i].dx;
             tri_list[i].vertices[1] += tri_list[i].dy;
             tri_list[i].vertices[3] += tri_list[i].dx;
             tri_list[i].vertices[4] += tri_list[i].dy;
             tri_list[i].vertices[6] += tri_list[i].dx;
             tri_list[i].vertices[7] += tri_list[i].dy;
-
+            
 
 
             float centerX = (tri_list[i].vertices[0] + tri_list[i].vertices[3] + tri_list[i].vertices[6]) / 3.0f;
@@ -545,7 +599,59 @@ void update(int) {
         break;
     }
     case 4: {
+        float theta = sp_point * 0.1f;
+        float r = a * exp(-k * theta);
+        float x = r * cos(theta)*0.1;
+        float y = r * sin(theta)*0.1;
+        for(int i =0;i<4;++i){
+            tri_list[i].dx = x;
+            tri_list[i].dy = y;
+            tri_list[i].vertices[0] += tri_list[i].dx;
+            tri_list[i].vertices[1] += tri_list[i].dy;
+            tri_list[i].vertices[3] += tri_list[i].dx;
+            tri_list[i].vertices[4] += tri_list[i].dy;
+            tri_list[i].vertices[6] += tri_list[i].dx;
+            tri_list[i].vertices[7] += tri_list[i].dy;
 
+            if (tri_list[i].vertices[0] < -1 || tri_list[i].vertices[0] > 1
+                || tri_list[i].vertices[3] < -1 || tri_list[i].vertices[3] > 1
+                || tri_list[i].vertices[6] < -1 || tri_list[i].vertices[6] > 1) {
+
+                tri_list[i].angl += 10.0f;
+
+            }
+            if (tri_list[i].vertices[1] < -1 || tri_list[i].vertices[1] > 1
+                || tri_list[i].vertices[4] < -1 || tri_list[i].vertices[4] > 1
+                || tri_list[i].vertices[7] < -1 || tri_list[i].vertices[7] > 1) {
+
+                tri_list[i].angl += 10.0f;
+            }
+
+            float centerX = (tri_list[i].vertices[0] + tri_list[i].vertices[3] + tri_list[i].vertices[6]) / 3.0f;
+            float centerY = (tri_list[i].vertices[1] + tri_list[i].vertices[4] + tri_list[i].vertices[7]) / 3.0f;
+
+
+            glm::mat4 rotate_mat = glm::rotate(glm::mat4(1.0f), glm::radians(tri_list[i].angl), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
+            glm::vec4 transformed1 = rotate_mat * glm::vec4(tri_list[i].vertices[0] - centerX, tri_list[i].vertices[1] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed2 = rotate_mat * glm::vec4(tri_list[i].vertices[3] - centerX, tri_list[i].vertices[4] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+            glm::vec4 transformed3 = rotate_mat * glm::vec4(tri_list[i].vertices[6] - centerX, tri_list[i].vertices[7] - centerY, 0.0f, 1.0f) + glm::vec4(centerX, centerY, 0.0f, 0.0f);
+
+
+            float tri_vertex1[18] = {
+                transformed1.x, transformed1.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed2.x, transformed2.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+                transformed3.x, transformed3.y, 0.0f, tri_list[i].r, tri_list[i].g, tri_list[i].b,
+            };
+
+
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri_vertex1)* i, sizeof(tri_vertex1), tri_vertex1);
+
+
+        }
+        ++sp_point;
         break;
     }
     }
