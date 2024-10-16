@@ -43,6 +43,7 @@ void make_fragment_shader();
 GLuint make_shader();
 GLvoid init_buffer();
 void make_spiral(float centerX, float centerY, int turns, bool clockwise, int what);
+void draw_spiral(int);
 
 //------------------------------------------------------
 int main(int argc, char** argv) {
@@ -250,5 +251,12 @@ GLvoid Mouse(int button, int state, int x, int y) {
         GLclampf mouse_y = -(float)(y - (float)600 / 2.0) * (float)(1.0 / (float)(600 / 2.0));
         make_spiral(mouse_x, mouse_y, 3, true, 6);
         glutPostRedisplay();
+    }
+}
+
+void draw_spiral(int) {
+    int temp{};
+    for (const auto& point : spiralPointsCom) {
+        
     }
 }

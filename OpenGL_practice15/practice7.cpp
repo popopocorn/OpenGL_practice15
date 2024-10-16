@@ -43,6 +43,7 @@ typedef struct shapes {
     std::vector<GLclampf> vertices;
     GLclampf r, g, b;
     char shape_{};
+    int shape_index{};
 };
 
 shapes shape_list[10];
@@ -280,7 +281,7 @@ void create_point() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'p' };
+    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'p', p_count };
     std::cout << shape_list[list_index].vertices[0];
     float vertex_data[6] = { shape_list[list_index].vertices[0],shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b };
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
@@ -295,7 +296,7 @@ void create_line() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'l' };
+    shape_list[list_index] = { {x,y,0.0f}, r, _g, b, 'l', l_count };
     std::cout << shape_list[list_index].vertices[0];
     float line_data[12] = {
         shape_list[list_index].vertices[0], shape_list[list_index].vertices[1], shape_list[list_index].vertices[2], shape_list[list_index].r, shape_list[list_index].g, shape_list[list_index].b,
@@ -312,7 +313,7 @@ void create_tri() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 't' };
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 't', t_count };
     std::cout << shape_list[list_index].vertices[0];
 
     float triangl_data[18] = {
@@ -332,7 +333,7 @@ void create_rect() {
     float r = float(g() % 1000) / 1000.0f;
     float _g = float(g() % 1000) / 1000.0f;
     float b = float(g() % 1000) / 1000.0f;
-    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 'r' };
+    shape_list[list_index] = { {x1,y1,0.0f}, r, _g, b, 'r', r_count };
     std::cout << shape_list[list_index].vertices[0];
 
     float rectangle_data[24] = {
@@ -410,7 +411,7 @@ void move(char key) {
     {
         float vertex_data[6] = { shape_list[target_].vertices[0],shape_list[target_].vertices[1], shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b };
         glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-        glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertex_data) * target_, sizeof(vertex_data), vertex_data);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertex_data) * shape_list[target_].shape_index, sizeof(vertex_data), vertex_data);
         break;
     }
 
@@ -421,7 +422,7 @@ void move(char key) {
             shape_list[target_].vertices[0] + 0.1f , shape_list[target_].vertices[1] - 0.1f, shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b
         };
         glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-        glBufferSubData(GL_ARRAY_BUFFER, sizeof(line_data) * target_, sizeof(line_data), line_data);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(line_data) * shape_list[target_].shape_index, sizeof(line_data), line_data);
     }
 
     break;
@@ -435,7 +436,7 @@ void move(char key) {
 
         };
         glBindBuffer(GL_ARRAY_BUFFER, VBO[2]);
-        glBufferSubData(GL_ARRAY_BUFFER, sizeof(triangl_data) * target_, sizeof(triangl_data), triangl_data);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(triangl_data) * shape_list[target_].shape_index, sizeof(triangl_data), triangl_data);
     }
 
     break;
@@ -449,7 +450,7 @@ void move(char key) {
         shape_list[target_].vertices[0],shape_list[target_].vertices[1] - 0.1f, shape_list[target_].vertices[2], shape_list[target_].r, shape_list[target_].g, shape_list[target_].b,
         };
         glBindBuffer(GL_ARRAY_BUFFER, VBO[3]);
-        glBufferSubData(GL_ARRAY_BUFFER, sizeof(rectangle_data) * target_, sizeof(rectangle_data), rectangle_data);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(rectangle_data) * shape_list[target_].shape_index, sizeof(rectangle_data), rectangle_data);
     }
 
     break;

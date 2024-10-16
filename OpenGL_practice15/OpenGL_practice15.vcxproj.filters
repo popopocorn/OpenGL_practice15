@@ -42,6 +42,15 @@
     <ClCompile Include="practice9.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="practice10.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="practice11.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="temp.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="opengl_frame.txt">
@@ -63,5 +72,6 @@
     <None Include="09_Vertex_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="triang1_shader.glsl" />
   </ItemGroup>
 </Project>

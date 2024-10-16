@@ -146,6 +146,11 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
             motion_type = 1;
         else
             motion_type = 0;
+
+        for (int i = 0; i < 4; ++i) {
+            tri_list[i].dx = 0.01;
+            tri_list[i].dy = 0.01;
+        }
         break;
 
     case '2':
@@ -153,6 +158,10 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
             motion_type = 2;
         else
             motion_type = 0;
+        for (int i = 0; i < 4; ++i) {
+            tri_list[i].dx = 0.01;
+            tri_list[i].dy = 0.01;
+        }
         break;
 
     case '3':
@@ -160,6 +169,10 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
             motion_type = 3;
         else
             motion_type = 0;
+        for (int i = 0; i < 4; ++i) {
+            tri_list[i].dx = -0.01;
+            tri_list[i].dy = 0;
+        }
         break;
 
     case '4':
@@ -317,7 +330,7 @@ void create_tri(int clicked_area, GLclampf x, GLclampf y) {
     tri_list[clicked_area].r = tri_r;
     tri_list[clicked_area].g = tri_g;
     tri_list[clicked_area].b = tri_b;
-    
+    tri_list[clicked_area].angl = 0;
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(tri_vertex1) * clicked_area, sizeof(tri_vertex1), tri_vertex1);
 
@@ -495,28 +508,8 @@ void update(int) {
      
     case 3: {
         for (int i = 0; i < 4; ++i) {
+            
 
-            tri_list[i].acc_dx += tri_list[i].dx;
-            tri_list[i].acc_dy += tri_list[i].dy;
-            if (tri_list[i].vertices[0] < -1 || tri_list[i].vertices[0] > 1
-                || tri_list[i].vertices[3] < -1 || tri_list[i].vertices[3] > 1
-                || tri_list[i].vertices[6] < -1 || tri_list[i].vertices[6] > 1) {
-                tri_list[i].dx *= -1;
-                tri_list[i].angl += 10.0f;
-
-            }
-            if (tri_list[i].vertices[1] < -1 || tri_list[i].vertices[1] > 1
-                || tri_list[i].vertices[4] < -1 || tri_list[i].vertices[4] > 1
-                || tri_list[i].vertices[7] < -1 || tri_list[i].vertices[7] > 1) {
-                tri_list[i].dy *= -1;
-                tri_list[i].angl += 10.0f;
-            }
-            if (tri_list[i].acc_dx < -0.1f || tri_list[i].acc_dx > 0.1f) {
-                tri_list[i].dx *= -1;
-            }
-            if (tri_list[i].acc_dy < -0.1f || tri_list[i].acc_dy > 0.1f) {
-                tri_list[i].dy *= -1;
-            }
             tri_list[i].vertices[0] += tri_list[i].dx;
             tri_list[i].vertices[1] += tri_list[i].dy;
             tri_list[i].vertices[3] += tri_list[i].dx;
