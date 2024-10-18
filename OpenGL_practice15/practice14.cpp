@@ -41,8 +41,8 @@ GLint width{ 800 }, height{ 600 };
 Model _cube_13;
 Model _diamond_13;
 
-int draw_face1{-1};
-int draw_face2{-1};
+int draw_face1{ -1 };
+int draw_face2{ -1 };
 
 
 //------------------------------------------------------
@@ -60,7 +60,7 @@ void print_model_info(const Model& model) {
     std::cout << "Total Faces: " << model.face_count << std::endl;
     for (size_t i = 0; i < model.face_count; ++i) {
         std::cout << "Face " << i + 1 << ": ("
-            << model.faces[i].v1 + 1 << ", " 
+            << model.faces[i].v1 + 1 << ", "
             << model.faces[i].v2 + 1 << ", "
             << model.faces[i].v3 + 1 << ")" << std::endl;
     }
@@ -88,7 +88,7 @@ void main(int argc, char** argv) {
     glutKeyboardFunc(Keyboard);
     read_obj_file("cube.obj", &_cube_13);
     read_obj_file("diamond.obj", &_diamond_13);
-    
+
 
     init_buffer();
 
@@ -115,12 +115,12 @@ GLvoid drawScene(GLvoid) {
     GLuint modelLoc = glGetUniformLocation(shader_program, "rotate");
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rotate_mat));
-    
+
     glBindVertexArray(VAO[0]);
 
     for (int i = 0; i < (_cube_13.face_count / 2); ++i) {
-        if(i==draw_face1 || i == draw_face2)
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i*sizeof(Face)*2));
+        if (i == draw_face1 - 1 || i == draw_face2 - 1)
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * sizeof(Face) * 2));
 
     }
     rotate_mat1 = glm::rotate(glm::mat4(1.0f), glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -131,9 +131,9 @@ GLvoid drawScene(GLvoid) {
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rotate_mat));
 
     glBindVertexArray(VAO[1]);
-    for (int i = 0; i < _diamond_13.face_count;++i) {
-        if(i == draw_face1 - 7 || i == draw_face2 - 7)
-            glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i*sizeof(Face)));
+    for (int i = 0; i < _diamond_13.face_count; ++i) {
+        if (i == draw_face1 - 7 || i == draw_face2 - 7)
+            glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i * sizeof(Face)));
 
     }
     glutSwapBuffers();
@@ -145,8 +145,8 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case 'c':
-        draw_face1 = g() % (_cube_13.face_count / 2);
-        draw_face2 = g() % (_cube_13.face_count / 2);
+        draw_face1 = g() % ((_cube_13.face_count / 2) - 1) + 1;
+        draw_face2 = g() % ((_cube_13.face_count / 2) - 1) + 1;
         while (draw_face1 == draw_face2) {
             draw_face2 = g() % ((_cube_13.face_count / 2) - 1) + 1;
         }
@@ -154,7 +154,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         std::cout << draw_face2 << std::endl;;
 
         break;
-        
+
     case 't':
         draw_face1 = (g() % _diamond_13.face_count) + 7;
         draw_face2 = (g() % _diamond_13.face_count) + 7;
@@ -170,13 +170,8 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     }
 
 
-    if ('1' <= key && key <= '9') {
+    if ('0' <= key && key <= '9') {
         draw_face1 = key - '0';
-        std::cout << draw_face1;
-        draw_face2 = -1;
-    }
-    if (key == '0') {
-        draw_face1 = 10;
         std::cout << draw_face1;
         draw_face2 = -1;
     }
@@ -231,7 +226,7 @@ GLuint make_shader() {
     glAttachShader(shader01, fragmentShader);
 
     glLinkProgram(shader01);
-        
+
 
     GLint result;
     GLchar errorLog[512];
@@ -263,14 +258,14 @@ GLvoid init_buffer() {
 
     glGenBuffers(1, &VBO[0]);
     glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-    glBufferData(GL_ARRAY_BUFFER, _cube_13.vertex_count*sizeof(Vertex), _cube_13.vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, _cube_13.vertex_count * sizeof(Vertex), _cube_13.vertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
 
     glGenBuffers(1, &EBO[0]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _cube_13.face_count*sizeof(Face), _cube_13.faces, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, _cube_13.face_count * sizeof(Face), _cube_13.faces, GL_STATIC_DRAW);
 
 
     print_model_info(_cube_13);
