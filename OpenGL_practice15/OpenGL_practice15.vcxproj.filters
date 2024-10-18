@@ -51,6 +51,9 @@
     <ClCompile Include="temp.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="practice13.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="opengl_frame.txt">
@@ -59,6 +62,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="file_open.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="read_obj.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -72,6 +78,19 @@
     <None Include="09_Vertex_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="triang1_shader.glsl" />
+    <None Include="13_Vertex_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="13_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="cube.obj">
+      <Filter>리소스 파일</Filter>
+    </Object>
+    <Object Include="diamond.obj">
+      <Filter>리소스 파일</Filter>
+    </Object>
   </ItemGroup>
 </Project>

@@ -48,6 +48,9 @@ bool drawing = false; // 나선을 그리기 시작할지 여부
 float mouse_x = 0.0f; // 클릭한 x 좌표
 float mouse_y = 0.0f; // 클릭한 y 좌표
 int spiral_count;
+int repeat;
+
+std::vector<std::vector<float>> tempspiral_point;
 //------------------------------------------------------
 //필요한 함수 선언
 void draw_spiral(float m_x, float m_y);
@@ -90,7 +93,7 @@ GLvoid drawScene(GLvoid) {
 
     if (sp_point > 0) {
         glPointSize(5.0);
-        glDrawArrays(GL_POINTS, 0, sp_point * (spiral_count+1)); // 생성된 점을 그린다.
+        glDrawArrays(GL_POINTS, 0, (spiral_count * 251) + sp_point); // 생성된 점을 그린다.
     }
 
     glutSwapBuffers();
@@ -106,6 +109,19 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         glutLeaveMainLoop();
         break;
     }
+    if ('1' <= key && key <= '5') {
+        repeat = key - '0';
+        while(repeat>0){
+
+            if (sp_point == 0) {
+                mouse_x = float(g() % 2000) / 1000.0f - 1.0f;
+                mouse_y = float(g() % 2000) / 1000.0f - 1.0f;
+                tempspiral_point.clear();
+                drawing = true; // 그리기 시작
+                --repeat;
+            }
+        }
+    }
     glutPostRedisplay();
 }
 
@@ -113,7 +129,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
     if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
         mouse_x = (float)(x - (float)width / 2.0) * (float)(1.0 / (float)(width / 2.0));
         mouse_y = -(float)(y - (float)height / 2.0) * (float)(1.0 / (float)(height / 2.0));
-        sp_point = 0; // 클릭 시 점 초기화
+        
         drawing = true; // 그리기 시작
     }
 }
@@ -212,25 +228,31 @@ void draw_spiral(float m_x, float m_y) {
         // VBO에 점 추가
         float sp_vertex[2] = { x, y };
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * sp_point, sizeof(sp_vertex), sp_vertex);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * ((spiral_count * 251) + sp_point), sizeof(sp_vertex), sp_vertex);
+
         sp_point++; // 점 수 증가
         last_x = x;
         last_y = y;
+        tempspiral_point.push_back({ x, y });
     }
     else if(sp_point<252){
-        float theta = sp_point * 0.1f;
-        float r = 0.1f * exp(-0.1f * theta);
-        float x = -r * cos(theta) + last_x;
-        float y = r * sin(theta) + last_y;
-
+        float temp_x = tempspiral_point.back()[0];
+        float temp_y = tempspiral_point.back()[1];
+        float x = last_x - (temp_x - last_x);
+        float y = last_y - (temp_y - last_y);;
+        tempspiral_point.erase(tempspiral_point.end() - 1);
         // VBO에 점 추가
         float sp_vertex[2] = { x, y };
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * sp_point, sizeof(sp_vertex), sp_vertex);
+        glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * ((spiral_count * 251) + sp_point), sizeof(sp_vertex), sp_vertex);
+
         sp_point++; // 점 수 증가
-        last_x = x;
-        last_y = y;
+
     }
     
-    
+    if (sp_point > 251) {
+        ++spiral_count;
+        sp_point = 0;
+        tempspiral_point.clear();
+    }
 }
