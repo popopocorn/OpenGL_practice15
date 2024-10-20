@@ -20,6 +20,8 @@ std::mt19937 g(rd());
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
+GLvoid SpecialKeyboard(int key, int x, int y);
+
 //------------------------------------------------------
 //셰이더 용 선언
 GLuint shader_program;
@@ -44,6 +46,12 @@ Model _diamond_13;
 bool draw_cube = false;
 bool draw_pyramid = false;
 bool is_wired = false;
+bool is_cull = false;
+
+glm::mat4 translate_mat(1.0f);
+
+float dx = 0.0f;
+float dy = 0.0f;
 
 int draw_face1{ -1 };
 int draw_face2{ -1 };
@@ -117,6 +125,7 @@ void main(int argc, char** argv) {
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
+    glutSpecialFunc(SpecialKeyboard);
     read_obj_file("cube.obj", &_cube_13);
     read_obj_file("pyramid.obj", &_diamond_13);
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
@@ -142,16 +151,27 @@ GLvoid drawScene(GLvoid) {
     
     glBindVertexArray(a_axis);
     GLuint modelLoc = glGetUniformLocation(shader_program, "rotate");
+    GLuint modelLoc2 = glGetUniformLocation(shader_program, "trans");
     glm::mat4 temp(1.0f);
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(temp));
+    glUniformMatrix4fv(modelLoc2, 1, GL_FALSE, glm::value_ptr(temp));
     glDrawArrays(GL_LINES, 0, 12);
+
+    if (is_cull) {
+        glEnable(GL_CULL_FACE);
+    }
+    else {
+        glDisable(GL_CULL_FACE);
+    }
 
     glm::mat4 rotate_mat1 = glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     glm::mat4 rotate_mat2 = glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(.0f, 0.0f, 1.0f));
     glm::mat4 rotate_mat = rotate_mat1 * rotate_mat2;
     modelLoc = glGetUniformLocation(shader_program, "rotate");
-
+    modelLoc2 = glGetUniformLocation(shader_program, "trans");
+    translate_mat = glm::translate(glm::mat4(1.0f), glm::vec3(dx, dy, 0.0f));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rotate_mat));
+    glUniformMatrix4fv(modelLoc2, 1, GL_FALSE, glm::value_ptr(translate_mat));
 
     
     glBindVertexArray(VAO[0]);
@@ -167,12 +187,12 @@ GLvoid drawScene(GLvoid) {
         }
     }
 
-    rotate_mat1 = glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotate_mat2 = glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(.0f, 0.0f, 1.0f));
-    rotate_mat = rotate_mat1 * rotate_mat2;
+ 
     modelLoc = glGetUniformLocation(shader_program, "rotate");
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rotate_mat));
+    translate_mat = glm::translate(translate_mat, glm::vec3(dx, dy, 0.0f));
+    glUniformMatrix4fv(modelLoc2, 1, GL_FALSE, glm::value_ptr(translate_mat));
 
     glBindVertexArray(VAO[1]);
     if(draw_pyramid){
@@ -209,6 +229,12 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     case 'W':
         is_wired = false;
         break;
+
+    case 'h':
+        is_cull = !is_cull;
+
+        break;
+    
     case 'q':
         glutLeaveMainLoop();
         break;
@@ -355,4 +381,33 @@ GLvoid init_buffer() {
     glEnableVertexAttribArray(1);
 
     print_model_info(_diamond_13);
+}
+GLvoid SpecialKeyboard(int key, int x, int y) {
+    switch (key) {
+    case GLUT_KEY_UP:
+        dy += 0.1f;
+        std::cout << key << std::endl;
+        std::cout << dx << ", " << dy << std::endl;
+        break;
+
+    case GLUT_KEY_DOWN:
+        dy -= 0.1f;
+        std::cout << key << std::endl;
+        std::cout << dx << ", " << dy << std::endl;
+        break;
+    case GLUT_KEY_LEFT:
+        dx -= 0.1f;
+        std::cout << key << std::endl;
+        std::cout << dx << ", " << dy << std::endl;
+        break;
+    case GLUT_KEY_RIGHT:
+        dx += 0.1f;
+        std::cout << key << std::endl;
+        std::cout << dx << ", " << dy << std::endl;
+
+    default:
+
+        break;
+    }
+    glutPostRedisplay();
 }

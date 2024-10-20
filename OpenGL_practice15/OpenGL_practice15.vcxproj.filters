@@ -90,7 +90,7 @@
     <None Include="14_Vertex_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
-    <None Include="14.Fragment_shader.glsl">
+    <None Include="14_Fragment_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

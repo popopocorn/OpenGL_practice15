@@ -184,7 +184,7 @@
     <None Include="09_Vertex_shader.glsl" />
     <None Include="13_Fragment_shader.glsl" />
     <None Include="13_Vertex_shader.glsl" />
-    <None Include="14.Fragment_shader.glsl" />
+    <None Include="14_Fragment_shader.glsl" />
     <None Include="14_Vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>
