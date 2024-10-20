@@ -10,8 +10,8 @@
 #include<random>
 #include<vector>
 //미리 선언할거
-#define vertex_shader_code "13_vertex_shader.glsl"
-#define fragment_shader_code "13_fragment_shader.glsl"
+#define vertex_shader_code "14_Vertex_shader.glsl"
+#define fragment_shader_code "14_Fragment_shader.glsl"
 std::random_device rd;
 std::mt19937 g(rd());
 
@@ -25,7 +25,7 @@ GLvoid Keyboard(unsigned char key, int x, int y);
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO[2], VBO[2], EBO[2];
+GLuint VAO[2], VBO[2], CBO[2], EBO[2], a_axis, b_axis;
 
 void make_vertex_shader();
 void make_fragment_shader();
@@ -41,9 +41,40 @@ GLint width{ 800 }, height{ 600 };
 Model _cube_13;
 Model _diamond_13;
 
+bool draw_cube = false;
+bool draw_pyramid = false;
+bool is_wired = false;
+
 int draw_face1{ -1 };
 int draw_face2{ -1 };
 
+const float cube_color[] = {
+    1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f, 1.0f,
+    1.0f, 0.0f, 1.0f,
+    0.0f, 0.0f, 0.0f,
+    1.0f, 1.0f, 1.0f,
+};
+
+const float pyramid_color[] = {
+    1.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 1.0f,
+    1.0f, 1.0f, 0.0f,
+    0.0f, 1.0f, 1.0f,
+};
+
+const float axis[] = {
+    0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    0.0f, -1.0f, 0.0, 1.0f, 1.0f, 1.0f,
+
+    -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+    1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
+
+};
 
 //------------------------------------------------------
 //필요한 함수 선언
@@ -87,7 +118,8 @@ void main(int argc, char** argv) {
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
     read_obj_file("cube.obj", &_cube_13);
-    read_obj_file("diamond.obj", &_diamond_13);
+    read_obj_file("pyramid.obj", &_diamond_13);
+    glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 
 
     init_buffer();
@@ -102,40 +134,58 @@ GLUquadricObj* qobj;
 GLvoid drawScene(GLvoid) {
 
     glClearColor(base_r, base_g, base_b, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(shader_program);
 
     glValidateProgram(shader_program);
-
-
-    glm::mat4 rotate_mat1 = glm::rotate(glm::mat4(1.0f), glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    glm::mat4 rotate_mat2 = glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(.0f, 0.0f, 1.0f));
-    glm::mat4 rotate_mat = rotate_mat1 * rotate_mat2;
+    
+    glBindVertexArray(a_axis);
     GLuint modelLoc = glGetUniformLocation(shader_program, "rotate");
+    glm::mat4 temp(1.0f);
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(temp));
+    glDrawArrays(GL_LINES, 0, 12);
+
+    glm::mat4 rotate_mat1 = glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 rotate_mat2 = glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(.0f, 0.0f, 1.0f));
+    glm::mat4 rotate_mat = rotate_mat1 * rotate_mat2;
+    modelLoc = glGetUniformLocation(shader_program, "rotate");
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rotate_mat));
 
+    
     glBindVertexArray(VAO[0]);
-
-    for (int i = 0; i < (_cube_13.face_count / 2); ++i) {
-        if (i == draw_face1 - 1 || i == draw_face2 - 1)
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * sizeof(Face) * 2));
-
+    if(draw_cube){
+        if(is_wired){
+            for (int i = 0; i < (_cube_13.face_count * 3) - 1; ++i)
+            {
+                glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(i * sizeof(unsigned int)));
+            }
+        }
+        else {
+            glDrawElements(GL_TRIANGLES, _cube_13.face_count*3, GL_UNSIGNED_INT, 0);
+        }
     }
-    rotate_mat1 = glm::rotate(glm::mat4(1.0f), glm::radians(50.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-    rotate_mat2 = glm::rotate(glm::mat4(1.0f), glm::radians(20.0f), glm::vec3(.0f, 0.0f, 1.0f));
+
+    rotate_mat1 = glm::rotate(glm::mat4(1.0f), glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    rotate_mat2 = glm::rotate(glm::mat4(1.0f), glm::radians(-30.0f), glm::vec3(.0f, 0.0f, 1.0f));
     rotate_mat = rotate_mat1 * rotate_mat2;
     modelLoc = glGetUniformLocation(shader_program, "rotate");
 
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(rotate_mat));
 
     glBindVertexArray(VAO[1]);
-    for (int i = 0; i < _diamond_13.face_count; ++i) {
-        if (i == draw_face1 - 7 || i == draw_face2 - 7)
-            glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i * sizeof(Face)));
-
+    if(draw_pyramid){
+        if(is_wired){
+            for (int i = 0; i < (_diamond_13.face_count * 3); ++i) {
+                glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(i * sizeof(unsigned int)));
+            }
+        }
+        else {
+            glDrawElements(GL_TRIANGLES, _diamond_13.face_count * 3, GL_UNSIGNED_INT, 0);
+        }
     }
+
     glutSwapBuffers();
 }
 GLvoid Reshape(int w, int h) {
@@ -145,25 +195,20 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case 'c':
-        draw_face1 = g() % ((_cube_13.face_count / 2) - 1) + 1;
-        draw_face2 = g() % ((_cube_13.face_count / 2) - 1) + 1;
-        while (draw_face1 == draw_face2) {
-            draw_face2 = g() % ((_cube_13.face_count / 2) - 1) + 1;
-        }
-        std::cout << draw_face1 << std::endl;;
-        std::cout << draw_face2 << std::endl;;
-
+        draw_cube = !draw_cube;
         break;
 
-    case 't':
-        draw_face1 = (g() % _diamond_13.face_count) + 7;
-        draw_face2 = (g() % _diamond_13.face_count) + 7;
-        while (draw_face1 == draw_face2) {
-            draw_face2 = (g() % _diamond_13.face_count) + 7;
-        }
+    case 'p':
+        draw_pyramid = !draw_pyramid;
 
         break;
+    case 'w':
+        is_wired = true;
+        break;
 
+    case 'W':
+        is_wired = false;
+        break;
     case 'q':
         glutLeaveMainLoop();
         break;
@@ -267,6 +312,13 @@ GLvoid init_buffer() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, _cube_13.face_count * sizeof(Face), _cube_13.faces, GL_STATIC_DRAW);
 
+    glGenBuffers(1, &CBO[0]);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float)*3, (void*)0);
+    glEnableVertexAttribArray(1);
+
 
     print_model_info(_cube_13);
 
@@ -279,11 +331,28 @@ GLvoid init_buffer() {
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
+    glGenBuffers(1, &CBO[1]);
+    glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramid_color), pyramid_color, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
+    glEnableVertexAttribArray(1);
 
     glGenBuffers(1, &EBO[1]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, _diamond_13.face_count * sizeof(Face), _diamond_13.faces, GL_STATIC_DRAW);
 
+    glGenVertexArrays(1, &a_axis);
+    glBindVertexArray(a_axis);
+
+    glGenBuffers(1, &b_axis);
+    glBindBuffer(GL_ARRAY_BUFFER, b_axis);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(axis), axis, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     print_model_info(_diamond_13);
 }

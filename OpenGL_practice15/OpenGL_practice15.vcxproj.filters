@@ -87,12 +87,21 @@
     <None Include="13_Fragment_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="14_Vertex_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="14.Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Object Include="cube.obj">
       <Filter>리소스 파일</Filter>
     </Object>
     <Object Include="diamond.obj">
+      <Filter>리소스 파일</Filter>
+    </Object>
+    <Object Include="pyramid.obj">
       <Filter>리소스 파일</Filter>
     </Object>
   </ItemGroup>
