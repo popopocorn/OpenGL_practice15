@@ -14,13 +14,25 @@
 #define fragment_shader_code "15_Fragment_shader.glsl"
 std::random_device rd;
 std::mt19937 g(rd());
-
+/*
+x/X x축 회전
+y/Y y축 회전
+r 공전
+s멈춤
+c바꾸기
+e/E 제자리 scale
+w/W 중심축 scale
+iop 도형1이동
+jkl 도형2이동
+방향키 zx이동
+1~5애니메이션
+*/
 //------------------------------------------------------
 //콜백함수
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
-
+GLvoid DirKeyboard(int, int, int);
 GLvoid timer(int);
 
 //------------------------------------------------------
@@ -64,10 +76,23 @@ const float axis[] = {
 float axis_dx{};
 float axis_dy{};
 
-float raxis_dx{};
-float raxis_dy{};
+int motion_flag = -1;
 
+float dx1 = -0.5f;
+float dy1{};
+float dz1{};
+
+float dx2 = 0.5f;
+float dy2{};
+float dz2{};
+
+float d_scale1{ 1 };
+float d_scale2{ 1 };
+float axis_scale{ 1.0 };
+
+float rotate_dx{};
 float rotate_dy{};
+float rotate_dz{};
 
 bool is_c = false;
 
@@ -93,7 +118,10 @@ void print_model_info(const Model& model) {
     std::cout << "\n\n\n";
 }
 
-
+void spiral_move();
+void cross_move();
+void z_rotate();
+void scale_rotate();
 //------------------------------------------------------
 void main(int argc, char** argv) {
     glutInit(&argc, argv);
@@ -118,7 +146,7 @@ void main(int argc, char** argv) {
     read_obj_file("cone.obj", &cone_15);
     read_obj_file("sphere.obj", &sphere_15);
     read_obj_file("cylinder.obj", &cylinder_15);
-    glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
+    glEnable(GL_DEPTH_TEST); 
 
 
     init_buffer();
@@ -146,16 +174,20 @@ GLvoid drawScene(GLvoid) {
     glm::mat4 temp(1.0f);
 
     temp = glm::rotate(temp, glm::radians(30.0f), glm::vec3(1.0, 0.0, 0.0));
-    temp = glm::rotate(temp, glm::radians(-30.0f), glm::vec3(0.0, 1.0, 0.0));
+    temp = glm::rotate(temp, glm::radians(-45.0f), glm::vec3(0.0, 1.0, 0.0));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(temp));
 
     glDrawArrays(GL_LINES, 0, 12);
 
     glm::mat4 tr_mat = glm::mat4(1.0f);
-    tr_mat = glm::rotate(tr_mat, glm::radians(rotate_dy), glm::vec3(0.0, 1.0, 0.0));
-    tr_mat = glm::translate(tr_mat, glm::vec3(-0.5f, 0.0f, 0.0f));
-    tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dx), glm::vec3(1.0, 0.0, 0.0));
-    tr_mat = glm::rotate(tr_mat, glm::radians(-30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
+    tr_mat = glm::rotate(tr_mat, glm::radians(rotate_dz), glm::vec3(0.0, 0.0, 1.0));
+    tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + rotate_dx), glm::vec3(1.0, 0.0, 0.0));
+    tr_mat = glm::rotate(tr_mat, glm::radians(-45.0f + rotate_dy), glm::vec3(0.0, 1.0, 0.0));
+    tr_mat = glm::scale(tr_mat, glm::vec3(axis_scale, axis_scale, axis_scale));
+    tr_mat = glm::translate(tr_mat, glm::vec3(dx1, dy1, dz1));
+    tr_mat = glm::rotate(tr_mat, glm::radians(axis_dx), glm::vec3(1.0, 0.0, 0.0));
+    tr_mat = glm::rotate(tr_mat, glm::radians(axis_dy), glm::vec3(0.0, 1.0, 0.0));
+    tr_mat = glm::scale(tr_mat, glm::vec3(d_scale1, d_scale1, d_scale1));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat));
 
 
@@ -176,10 +208,14 @@ GLvoid drawScene(GLvoid) {
     }
 
     glm::mat4 tr_mat2 = glm::mat4(1.0f);
-    tr_mat2 = glm::rotate(tr_mat2, glm::radians(rotate_dy), glm::vec3(0.0, 1.0, 0.0));
-    tr_mat2 = glm::translate(tr_mat2, glm::vec3(0.5f, 0.0f, 0.0f));
-    tr_mat2 = glm::rotate(tr_mat2, glm::radians(30.0f + raxis_dx), glm::vec3(1.0, 0.0, 0.0));
-    tr_mat2 = glm::rotate(tr_mat2, glm::radians(-30.0f + raxis_dy), glm::vec3(0.0, 1.0, 0.0));
+    tr_mat2 = glm::rotate(tr_mat2, glm::radians(rotate_dz), glm::vec3(0.0, 0.0, 1.0));
+    tr_mat2 = glm::rotate(tr_mat2, glm::radians(30.0f + rotate_dx), glm::vec3(1.0, 0.0, 0.0));
+    tr_mat2 = glm::rotate(tr_mat2, glm::radians(-45.0f + rotate_dy), glm::vec3(0.0, 1.0, 0.0));
+    tr_mat2 = glm::scale(tr_mat2, glm::vec3(axis_scale, axis_scale, axis_scale));
+    tr_mat2 = glm::translate(tr_mat2, glm::vec3(dx2, dy2, dz2));
+    tr_mat2 = glm::rotate(tr_mat2, glm::radians(axis_dx), glm::vec3(1.0, 0.0, 0.0));
+    tr_mat2 = glm::rotate(tr_mat2, glm::radians(axis_dy), glm::vec3(0.0, 1.0, 0.0));
+    tr_mat2 = glm::scale(tr_mat2, glm::vec3(d_scale2, d_scale2, d_scale2));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat2));
     if (not is_c) {
         glBindVertexArray(VAO[1]);
@@ -225,7 +261,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         axis_dx = 0;
         axis_dy = 0;
         rotate_dy = 0;
-        what_spin = 3;
+        motion_flag = -1;
         break;
 
     case 'r':
@@ -235,19 +271,93 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     case 'R':
         spin_flag = 6;
         break;
+        
+    case '3':
+        spin_flag = 5;
+        break;
 
     case 'c':
         is_c = !is_c;
         break;
 
+    case 'e':
+        d_scale1 += 0.1f;
+        d_scale2 += 0.1f;
+        break;
+
+    case 'E':
+        d_scale1 -= 0.1f;
+        d_scale2 -= 0.1f;
+        break;
+
+    case 'w':
+        axis_scale += 0.1f;
+        break;
+
+    case 'W':
+        axis_scale -= 0.1f;
+        break;
+
+    case 'i':
+        dx1 += 0.1f;
+        break;
+
+    case 'I':
+        dx1 -= 0.1f;
+        break;
+
+    case 'o':
+        dy1 += 0.1f;
+        break;
+
+    case 'O':
+        dy1 -= 0.1f;
+        break;
+
+    case 'p':
+        dz1 += 0.1f;
+        break;
+
+    case 'P':
+        dz1 -= 0.1f;
+        
+        break;
+    case 'j':
+        dx2 += 0.1f;
+        break;
+
+    case 'J':
+        dx2 -= 0.1f;
+        break;
+
+    case 'k':
+        dy2 += 0.1f;
+        break;
+
+    case 'K':
+        dy2 -= 0.1f;
+        break;
+
+    case 'l':
+        dz2 += 0.1f;
+        break;
+
+    case 'L':
+        dz2 -= 0.1f;
+
+
+        break;
     case 'q':
         glutLeaveMainLoop();
         break;
     }
-    if ('1' <= key && key <= '3') {
-        what_spin = key - '0';
+
+    if ('1' <= key && key <= '5') {
+        motion_flag = key - '0';
     }
 
+    std::cout << dz1 << std::endl;
+    std::cout << dz2 << std::endl;
     glutPostRedisplay();
 }
 
@@ -405,41 +515,37 @@ GLvoid timer(int value) {
     switch (spin_flag)
     {
     case 1:
-        if (what_spin == 1 || what_spin == 3)
-            axis_dx += 1.0;
-        if (what_spin == 2 || what_spin == 3)
-            raxis_dx += 1.0;
+
+        axis_dx += 1.0;
 
         break;
 
     case 2:
-        if (what_spin == 1 || what_spin == 3)
-            axis_dx -= 1.0;
-        if (what_spin == 2 || what_spin == 3)
-            raxis_dx -= 1.0;
+
+        axis_dx -= 1.0;
 
         break;
 
     case 3:
-        if (what_spin == 1 || what_spin == 3)
-            axis_dy += 1.0;
-        if (what_spin == 2 || what_spin == 3)
-            raxis_dy += 1.0;
+
+        axis_dy += 1.0;
+
         break;
 
     case 4:
-        if (what_spin == 1 || what_spin == 3)
-            axis_dy -= 1.0;
-        if (what_spin == 2 || what_spin == 3)
-            raxis_dy -= 1.0;
+
+        axis_dy -= 1.0;
+
         break;
 
     case 5:
+
         rotate_dy += 1.0;
 
         break;
 
     case 6:
+
         rotate_dy -= 1.0;
 
         break;
@@ -448,9 +554,50 @@ GLvoid timer(int value) {
 
         break;
     }
+    switch (motion_flag) {
+    case 1:
+        spiral_move();
+        break;
 
+    case 2:
+        cross_move();
+        break;
+
+    case 4:
+        z_rotate();
+        break;
+
+    case 5:
+        scale_rotate();
+        break;
+    }
 
 
     glutPostRedisplay();
     glutTimerFunc(60, timer, 0);
+}
+
+GLvoid DirKeyboard(int key, int x, int y) {
+
+}
+
+
+void spiral_move() {
+    rotate_dy += 1.0f;
+    dx1 += 0.001f;
+    dx2 -= 0.001f;
+}
+void cross_move() {
+    if(dx1<0.5f)
+        dx1 += 0.01f;
+    if(dx2>-0.5f)
+        dx2 -= 0.01f;
+}
+void z_rotate() {
+    rotate_dz += 1.0f;
+}
+void scale_rotate() {
+    rotate_dz += 1.0f;
+    d_scale1 += 0.005f;
+    d_scale2 -= 0.005f;
 }
