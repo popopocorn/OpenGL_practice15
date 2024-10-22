@@ -144,7 +144,7 @@ GLvoid drawScene(GLvoid) {
     glBindVertexArray(a_axis);
 
     glm::mat4 temp(1.0f);
-    
+
     temp = glm::rotate(temp, glm::radians(30.0f), glm::vec3(1.0, 0.0, 0.0));
     temp = glm::rotate(temp, glm::radians(-30.0f), glm::vec3(0.0, 1.0, 0.0));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(temp));
@@ -158,9 +158,9 @@ GLvoid drawScene(GLvoid) {
     tr_mat = glm::rotate(tr_mat, glm::radians(-30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat));
 
-    
 
-    if(not is_c){
+
+    if (not is_c) {
         glBindVertexArray(VAO[0]);
         for (int i = 0; i < (cube_15.face_count * 3) - 1; ++i)
         {
@@ -181,7 +181,7 @@ GLvoid drawScene(GLvoid) {
     tr_mat2 = glm::rotate(tr_mat2, glm::radians(30.0f + raxis_dx), glm::vec3(1.0, 0.0, 0.0));
     tr_mat2 = glm::rotate(tr_mat2, glm::radians(-30.0f + raxis_dy), glm::vec3(0.0, 1.0, 0.0));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat2));
-    if(not is_c){
+    if (not is_c) {
         glBindVertexArray(VAO[1]);
         for (int i = 0; i < (cone_15.face_count * 3); ++i) {
             glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(i * sizeof(unsigned int)));
@@ -239,7 +239,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     case 'c':
         is_c = !is_c;
         break;
-        
+
     case 'q':
         glutLeaveMainLoop();
         break;
@@ -349,7 +349,7 @@ GLvoid init_buffer() {
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
-    
+
     glGenBuffers(1, &EBO[1]);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, cone_15.face_count * sizeof(Face), cone_15.faces, GL_STATIC_DRAW);
@@ -436,7 +436,7 @@ GLvoid timer(int value) {
 
     case 5:
         rotate_dy += 1.0;
-        
+
         break;
 
     case 6:
