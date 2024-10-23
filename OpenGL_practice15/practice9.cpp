@@ -544,8 +544,8 @@ void update(int) {
                     tri_list[i].dx = -0.01f;
                     tri_list[i].dy = 0;
                     tri_list[i].line =0;
-                    tri_list[i].max_x -= 0.1f;
-                    tri_list[i].max_y -= 0.1f;
+                    tri_list[i].max_x -= 0.2f;
+                    tri_list[i].max_y -= 0.2f;
                 }
                 break;
             }
