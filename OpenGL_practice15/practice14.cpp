@@ -87,7 +87,8 @@ const float axis[] = {
 
 float axis_dx{};
 float axis_dy{};
-
+float dx{};
+float dy{};
 
 //------------------------------------------------------
 //필요한 함수 선언
@@ -171,7 +172,7 @@ GLvoid drawScene(GLvoid) {
         glDisable(GL_CULL_FACE);
     }
     glm::mat4 tr_mat = glm::mat4(1.0f);
-    tr_mat = glm::translate(tr_mat, glm::vec3(-0.5, 0.0, 0.0f));
+    tr_mat = glm::translate(tr_mat, glm::vec3(dx, dy, 0.0f));
     tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dx), glm::vec3(1.0, 0.0, 0.0));
     tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
     GLuint modloc = glGetUniformLocation(shader_program, "trans");
@@ -190,7 +191,7 @@ GLvoid drawScene(GLvoid) {
         }
     }
     glm::mat4 tr_mat2 = glm::mat4(1.0f);
-    tr_mat2 = glm::translate(tr_mat2, glm::vec3(0.5, 0.0, 0.0f));
+    tr_mat2 = glm::translate(tr_mat2, glm::vec3(dx, dy, 0.0f));
     tr_mat2 = glm::rotate(tr_mat2, glm::radians(axis_dx), glm::vec3(1.0, 0.0, 0.0));
     tr_mat2 = glm::rotate(tr_mat2, glm::radians(axis_dy), glm::vec3(0.0, 1.0, 0.0));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat2));

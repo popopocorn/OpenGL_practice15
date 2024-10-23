@@ -119,7 +119,7 @@ GLvoid drawScene(GLvoid) {
     glBindVertexArray(VAO[0]);
 
     for (int i = 0; i < (_cube_13.face_count / 2); ++i) {
-        if(i==draw_face1 || i == draw_face2)
+        if(i==draw_face1 - 1 || i == draw_face2 - 1)
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i*sizeof(Face)*2));
 
     }
@@ -132,7 +132,7 @@ GLvoid drawScene(GLvoid) {
 
     glBindVertexArray(VAO[1]);
     for (int i = 0; i < _diamond_13.face_count;++i) {
-        if(i == draw_face1 - 7 || i == draw_face2 - 7)
+        if(i == draw_face1 - 7 || i == draw_face2 - 7 )
             glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i*sizeof(Face)));
 
     }
@@ -145,8 +145,8 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case 'c':
-        draw_face1 = g() % (_cube_13.face_count / 2);
-        draw_face2 = g() % (_cube_13.face_count / 2);
+        draw_face1 = g() % (_cube_13.face_count / 2) + 1;
+        draw_face2 = g() % (_cube_13.face_count / 2) + 1;
         while (draw_face1 == draw_face2) {
             draw_face2 = g() % ((_cube_13.face_count / 2) - 1) + 1;
         }

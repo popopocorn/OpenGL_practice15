@@ -41,6 +41,7 @@ typedef struct spiral_vertex {
     std::vector<GLclampf> vertices;
     GLclampf r, g, b;
     float dx{ 0.01f }, dy{ -0.01f };
+    
 };
 
 int sp_point = 0; // 현재 점의 수
@@ -49,7 +50,7 @@ float mouse_x = 0.0f; // 클릭한 x 좌표
 float mouse_y = 0.0f; // 클릭한 y 좌표
 int spiral_count;
 int repeat;
-
+int cnt{};
 std::vector<std::vector<float>> tempspiral_point;
 //------------------------------------------------------
 //필요한 함수 선언
@@ -93,7 +94,7 @@ GLvoid drawScene(GLvoid) {
 
     if (sp_point > 0) {
         glPointSize(5.0);
-        glDrawArrays(GL_POINTS, 0, (spiral_count * 251) + sp_point); // 생성된 점을 그린다.
+        glDrawArrays(GL_POINTS, 0, cnt); // 생성된 점을 그린다.
     }
 
     glutSwapBuffers();
@@ -212,6 +213,10 @@ void update(int) {
     if (drawing) {
         draw_spiral(mouse_x, mouse_y); // 나선 그리기
     }
+    else {
+        sp_point = 0;
+        tempspiral_point.clear();
+    }
 
     glutPostRedisplay();
     glutTimerFunc(1000 / 60, update, 0);
@@ -227,9 +232,10 @@ void draw_spiral(float m_x, float m_y) {
 
         // VBO에 점 추가
         float sp_vertex[2] = { x, y };
+        
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * ((spiral_count * 251) + sp_point), sizeof(sp_vertex), sp_vertex);
-
+        ++cnt;
         sp_point++; // 점 수 증가
         last_x = x;
         last_y = y;
@@ -245,14 +251,13 @@ void draw_spiral(float m_x, float m_y) {
         float sp_vertex[2] = { x, y };
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 2 * ((spiral_count * 251) + sp_point), sizeof(sp_vertex), sp_vertex);
-
+        ++cnt;
         sp_point++; // 점 수 증가
 
     }
     
     if (sp_point > 251) {
         ++spiral_count;
-        sp_point = 0;
-        tempspiral_point.clear();
+
     }
 }
