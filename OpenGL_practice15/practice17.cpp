@@ -51,7 +51,7 @@ bool is_cull = false;
 
 glm::mat4 translate_mat(1.0f);
 
-int spin_flag = -1;// 1=+x 2=-x 3=+y 4=-y
+bool spin_flag = false;
 
 const float cube_color[] = {
     1.0f, 0.0f, 0.0f,
@@ -245,10 +245,21 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 
         break;
     case 'y':
-        spin_flag = 3;
+        spin_flag = !spin_flag;
+        break;
+    case 't':
+
+        break;
+
+    case 'f':
+
         break;
 
     case 's':
+
+        break;
+
+    case 'b':
 
         break;
 
@@ -435,29 +446,8 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
     glutPostRedisplay();
 }
 GLvoid timer(int value) {
-
-    switch (spin_flag)
-    {
-    case 1:
-        axis_dx += 1.0;
-
-        break;
-
-    case 2:
-        axis_dx -= 1.0;
-        break;
-
-    case 3:
-        axis_dy += 1.0;
-        break;
-
-    case 4:
-        axis_dy -= 1.0;
-        break;
-
-    default:
-
-        break;
+    if (spin_flag) {
+        axis_dy += 5.0f;
     }
 
 
