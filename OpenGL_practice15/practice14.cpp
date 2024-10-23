@@ -10,8 +10,8 @@
 #include<random>
 #include<vector>
 //미리 선언할거
-#define vertex_shader_code "15_Vertex_shader.glsl"
-#define fragment_shader_code "15_Fragment_shader.glsl"
+#define vertex_shader_code "14_Vertex_shader.glsl"
+#define fragment_shader_code "14_Fragment_shader.glsl"
 std::random_device rd;
 std::mt19937 g(rd());
 
