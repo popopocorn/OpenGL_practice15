@@ -73,11 +73,11 @@ const float pyramid_color[] = {
 };
 
 const float axis[] = {
-    0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, -1.0f, 0.0, 1.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0, 1.0f, 0.0f, 0.0f,
 
-    -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
 
     0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
     0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
@@ -95,6 +95,34 @@ float face_rotatex[6];
 float face_rotatey[6];
 float face_rotatez[6];
 float face_scale[6]{1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
+
+float for_face_rotate_dx{};
+float for_face_rotate_dy{};
+
+
+float pyramid_rotate_x[4];
+float pyramid_rotate_y[4];
+float pyramid_rotate_z[4];
+
+float pyramid_dx[4];
+float pyramid_dy[4];
+float pyramid_dz[4];
+
+
+bool top_flag = false;
+bool front_flag = false;
+bool side_flag = false;
+bool back_flag = false;
+
+bool open_flag = false;
+bool open_rotate = false;
+
+int animation_flag = -1;
+
+bool projection_flag = false;
+
+bool pyramid1_flag = false;
+bool pyramid2_flag = false;
 
 
 int face;
@@ -140,7 +168,7 @@ void main(int argc, char** argv) {
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
     glutSpecialFunc(SpecialKeyboard);
-    glutTimerFunc(60, timer, 0);
+    glutTimerFunc(10, timer, 0);
     read_obj_file("cube.obj", &cube_17);
     read_obj_file("pyramid.obj", &pyramid_17);
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
@@ -164,14 +192,16 @@ GLvoid drawScene(GLvoid) {
 
     glValidateProgram(shader_program);
     GLuint modelLoc2 = glGetUniformLocation(shader_program, "trans");
-
+    GLuint facloc = glGetUniformLocation(shader_program, "trans_by_face");
 
     glBindVertexArray(a_axis);
 
     glm::mat4 temp(1.0f);
+    glUniformMatrix4fv(facloc, 1, GL_FALSE, glm::value_ptr(temp));
     temp = glm::rotate(temp, glm::radians(30.0f), glm::vec3(1.0, 0.0, 0.0));
     temp = glm::rotate(temp, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
     glUniformMatrix4fv(modelLoc2, 1, GL_FALSE, glm::value_ptr(temp));
+    
 
     glDrawArrays(GL_LINES, 0, 12);
 
@@ -181,50 +211,74 @@ GLvoid drawScene(GLvoid) {
     else {
         glDisable(GL_CULL_FACE);
     }
+
+    glm::mat4 proj1 = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f);
+    glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
+    proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -5.0f));
+    GLuint projection = glGetUniformLocation(shader_program, "projection");
+    if (projection_flag) {
+        glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj2));
+    }
+    else {
+        glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj1));
+    }
+
     glm::mat4 tr_mat = glm::mat4(1.0f);
     tr_mat = glm::translate(tr_mat, glm::vec3(dx, dy, 0.0f));
     tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dx), glm::vec3(1.0, 0.0, 0.0));
     tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
     GLuint modloc = glGetUniformLocation(shader_program, "trans");
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat));
-    GLuint facloc = glGetUniformLocation(shader_program, "trans_by_face");
     
     glm::mat4 cube_face_trans[6] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
     for (int i = 0; i < 6; ++i) {
         //축소 * 이동 * 이동 * 회전 * 이동
-        cube_face_trans[i] = glm::scale(cube_face_trans[i], glm::vec3(1.0f, face_scale[i], face_scale[i]));
+        cube_face_trans[i] = glm::scale(cube_face_trans[i], glm::vec3(face_scale[i], face_scale[i], face_scale[i]));
         cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(face_dx[i], face_dy[i], 0.0f));
-        cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(-face_dx[i], -face_dy[i], 0.0f));
-        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(0.0f), glm::vec3(1.0, 0.0, 0.0));
-        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(0.0f), glm::vec3(0.0, 1.0, 0.0));
-        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(0.0f), glm::vec3(0.0, 0.0, 1.0));
-        cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(face_dx[i], face_dy[i], 0.0f));
+        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(face_rotatey[i]), glm::vec3(0.0, 1.0, 0.0));
+        cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(0.0f, -for_face_rotate_dy, -for_face_rotate_dx));
+        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(face_rotatex[i]), glm::vec3(1.0, 0.0, 0.0));
+        
+        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(face_rotatez[i]), glm::vec3(0.0, 0.0, 1.0));
+        cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(0.0f, for_face_rotate_dy, for_face_rotate_dx));
     }
 
     glBindVertexArray(VAO[0]);
     if (draw_cube) {
         for(int i=0;i<cube_17.face_count/2;++i){
-            glUniformMatrix4fv(facloc, 1, GL_FALSE, glm::value_ptr(cube_face_trans[i]));
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * sizeof(float) * 6));
-
-
+                glUniformMatrix4fv(facloc, 1, GL_FALSE, glm::value_ptr(cube_face_trans[i]));
+                glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * sizeof(float) * 6));
         }
     }
     glm::mat4 tr_mat2 = glm::mat4(1.0f);
     tr_mat2 = glm::translate(tr_mat2, glm::vec3(dx, dy, 0.0f));
-    tr_mat2 = glm::rotate(tr_mat2, glm::radians(axis_dx), glm::vec3(1.0, 0.0, 0.0));
-    tr_mat2 = glm::rotate(tr_mat2, glm::radians(axis_dy), glm::vec3(0.0, 1.0, 0.0));
+    tr_mat2 = glm::rotate(tr_mat2, glm::radians(30.0f + axis_dx), glm::vec3(1.0, 0.0, 0.0));
+    tr_mat2 = glm::rotate(tr_mat2, glm::radians(30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
     glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat2));
 
+    glm::mat4 pyramid_face[4] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+    for (int i = 0; i < 4; ++i) {
+        pyramid_face[i] = glm::translate(pyramid_face[i], glm::vec3(-pyramid_dx[i], -pyramid_dy[i], -pyramid_dz[i]));
+        pyramid_face[i] = glm::rotate(pyramid_face[i], glm::radians(pyramid_rotate_x[i]), glm::vec3(1.0f, 0.0f, 0.0f));
+        pyramid_face[i] = glm::rotate(pyramid_face[i], glm::radians(pyramid_rotate_y[i]), glm::vec3(0.0f, 1.0f, 0.0f));
+        pyramid_face[i] = glm::rotate(pyramid_face[i], glm::radians(pyramid_rotate_z[i]), glm::vec3(0.0f, 0.0f, 1.0f));
+        pyramid_face[i] = glm::translate(pyramid_face[i], glm::vec3(pyramid_dx[i], pyramid_dy[i], pyramid_dz[i]));
+    }
+    glm::mat4 p_temp = glm::mat4(1.0f);
+    GLuint pyramid_mat = glGetUniformLocation(shader_program, "trans_by_face");
     glBindVertexArray(VAO[1]);
     if (draw_pyramid) {
-        if (is_wired) {
-            for (int i = 0; i < (pyramid_17.face_count * 3); ++i) {
-                glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, (void*)(i * sizeof(unsigned int)));
+        for (int i = 0; i < pyramid_17.face_count; ++i) {
+            //2는 왼쪽 3앞4오5뒤
+            if(i>1)
+            {
+                glUniformMatrix4fv(pyramid_mat, 1, GL_FALSE, glm::value_ptr(pyramid_face[i-2]));
+                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i * sizeof(float) * 3));
             }
-        }
-        else {
-            glDrawElements(GL_TRIANGLES, pyramid_17.face_count * 3, GL_UNSIGNED_INT, 0);
+            else {
+                glUniformMatrix4fv(pyramid_mat, 1, GL_FALSE, glm::value_ptr(p_temp));
+                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i * sizeof(float) * 3));
+            }
         }
     }
 
@@ -240,32 +294,48 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         draw_cube = !draw_cube;
         break;
 
-    case 'p':
+    case 'v':
         draw_pyramid = !draw_pyramid;
+        break;
+
+    case 'p':
+        projection_flag = !projection_flag;
 
         break;
     case 'y':
         spin_flag = !spin_flag;
         break;
     case 't':
-
+        //2가 윗면
+        top_flag = !top_flag;
         break;
 
     case 'f':
-
+        //5가 앞면
+        front_flag = !front_flag;
         break;
 
     case 's':
-
+        //1, 3;
+        side_flag = !side_flag;
         break;
 
     case 'b':
-
+        //0이 뒤
+        back_flag = !back_flag;
         break;
 
     case 'h':
         is_cull = !is_cull;
 
+        break;
+
+    case 'o':
+        pyramid1_flag = !pyramid1_flag;
+        break;
+
+    case 'r':
+        pyramid2_flag = !pyramid2_flag;
         break;
 
     case 'q':
@@ -449,9 +519,117 @@ GLvoid timer(int value) {
     if (spin_flag) {
         axis_dy += 5.0f;
     }
+    if (top_flag) {
+        face_rotatey[2] += 2.0f;
+    }
+    if (back_flag) {
+        if (face_scale[0] > 0.0f) {
+            face_scale[0] -= 0.1f;
+        }
+    }
+    else {
+        if (face_scale[0] < 1.0f) {
+            face_scale[0] += 0.1f;
+        }
+    }
 
+    if (side_flag) {
+        if (face_dy[1] < 0.5f && face_dy[3] < 0.5f) {
+            face_dy[1] += 0.1f;
+            face_dy[3] += 0.1f;
+        }
+    }
+    else {
+        if (face_dy[1] > 0.1f && face_dy[3] > 0.1f) {
+            face_dy[1] -= 0.1f;
+            face_dy[3] -= 0.1f;
+        }
+    }
+    if (front_flag) {
+        for_face_rotate_dx = -0.25f;
+        for_face_rotate_dy = 0.25f;
+        if (face_rotatex[5] < 90.0f) {
+            face_rotatex[5] += 5.0f;
+        }
+    }
+    else {
+        for_face_rotate_dx = -0.25f;
+        for_face_rotate_dy = 0.25f;
+        if (face_rotatex[5] > 0.0f) {
+            face_rotatex[5] -= 5.0f;
+        }
+    }
+    
+    if (pyramid1_flag) {
+        //2왼3앞4오5뒤
+        if (pyramid_rotate_z[0] < 233 && pyramid_rotate_x[1]<233 && pyramid_rotate_z[2] > -233 && pyramid_rotate_x[3] > -233) {
+            pyramid_dx[0] = 0.25;
+            pyramid_dy[0] = 0.25;
+            pyramid_rotate_z[0] += 1.0f;
+            
+            pyramid_dz[1] = -0.25;
+            pyramid_dy[1] = 0.25;
+            pyramid_rotate_x[1] += 1.0f;
 
+            pyramid_dx[2] = -0.25;
+            pyramid_dy[2] = 0.25;
+            pyramid_rotate_z[2] -= 1.0f;
+
+            pyramid_dz[3] = 0.25;
+            pyramid_dy[3] = 0.25;
+            pyramid_rotate_x[3] -= 1.0f;
+        }
+    }
+    else if(not pyramid2_flag) {
+        if (pyramid_rotate_z[0] > 0 && pyramid_rotate_x[1] > 0 && pyramid_rotate_z[2] < 0 && pyramid_rotate_x[3] < 0) {
+            pyramid_rotate_z[0] -= 1.0f;
+            pyramid_rotate_x[1] -= 1.0f;
+            pyramid_rotate_z[2] += 1.0f;
+            pyramid_rotate_x[3] += 1.0f;
+        }
+    }
+    if (pyramid2_flag) {
+        if (pyramid_rotate_z[0] < 90) {
+            pyramid_dx[0] = 0.25;
+            pyramid_dy[0] = 0.25;
+            pyramid_rotate_z[0] += 1.0f;
+        }
+        if (pyramid_rotate_z[0] > 85 && pyramid_rotate_x[1] < 90) {
+
+            pyramid_dz[1] = -0.25;
+            pyramid_dy[1] = 0.25;
+            pyramid_rotate_x[1] += 1.0f;
+
+        }
+        if (pyramid_rotate_x[1] > 85 && pyramid_rotate_z[2] > -90) {
+
+            pyramid_dx[2] = -0.25;
+            pyramid_dy[2] = 0.25;
+            pyramid_rotate_z[2] -= 1.0f;
+
+        }
+        if (pyramid_rotate_z[2] < -85 && pyramid_rotate_x[3] > -90) {
+            pyramid_dz[3] = 0.25;
+            pyramid_dy[3] = 0.25;
+            pyramid_rotate_x[3] -= 1.0f;
+        }
+    }
+    else if(not pyramid1_flag){
+        if (pyramid_rotate_z[0] > 0) {
+            pyramid_rotate_z[0] -= 1.0f;
+        }
+        if (pyramid_rotate_x[1] > 0) {
+            pyramid_rotate_x[1] -= 1.0f;
+        }
+        if (pyramid_rotate_z[2] < 0) {
+            pyramid_rotate_z[2] += 1.0f;
+        }
+        if (pyramid_rotate_x[3] < 0) {
+            pyramid_rotate_x[3] += 1.0f;
+
+        }
+    }
 
     glutPostRedisplay();
-    glutTimerFunc(60, timer, 0);
+    glutTimerFunc(10, timer, 0);
 }

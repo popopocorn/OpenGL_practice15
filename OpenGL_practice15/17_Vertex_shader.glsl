@@ -11,6 +11,6 @@ uniform mat4 projection;
 
 void main() {
 
-    gl_Position = trans * trans_by_face * vec4(position, 1.0);
+    gl_Position = projection * trans * trans_by_face * vec4(position, 1.0);
     out_color=in_color;
 }
