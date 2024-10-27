@@ -193,7 +193,7 @@ GLvoid drawScene(GLvoid) {
     glValidateProgram(shader_program);
     GLuint modelLoc2 = glGetUniformLocation(shader_program, "trans");
     GLuint facloc = glGetUniformLocation(shader_program, "trans_by_face");
-
+    GLuint modloc = glGetUniformLocation(shader_program, "trans");
     glBindVertexArray(a_axis);
 
     glm::mat4 temp(1.0f);
@@ -223,13 +223,6 @@ GLvoid drawScene(GLvoid) {
         glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj1));
     }
 
-    glm::mat4 tr_mat = glm::mat4(1.0f);
-    tr_mat = glm::translate(tr_mat, glm::vec3(dx, dy, 0.0f));
-    tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dx), glm::vec3(1.0, 0.0, 0.0));
-    tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
-    GLuint modloc = glGetUniformLocation(shader_program, "trans");
-    glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat));
-    
     glm::mat4 cube_face_trans[6] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
     for (int i = 0; i < 6; ++i) {
         //축소 * 이동 * 이동 * 회전 * 이동

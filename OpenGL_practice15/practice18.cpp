@@ -7,13 +7,10 @@
 #include<gl/glm/gtc/matrix_transform.hpp>
 #include"file_open.h"
 #include"read_obj.h"
-#include<random>
 #include<vector>
 //미리 선언할거
-#define vertex_shader_code "17_Vertex_shader.glsl"
-#define fragment_shader_code "17_Fragment_shader.glsl"
-std::random_device rd;
-std::mt19937 g(rd());
+#define vertex_shader_code "18_Vertex_shader.glsl"
+#define fragment_shader_code "18_Fragment_shader.glsl"
 
 //------------------------------------------------------
 //콜백함수
@@ -28,7 +25,8 @@ GLvoid timer(int);
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO[2], VBO[2], CBO[2], EBO[2], a_axis, b_axis;
+GLuint VAO[7], VBO[7], EBO[7];
+GLuint OAO[6], OBO[6];
 
 void make_vertex_shader();
 void make_fragment_shader();
@@ -36,116 +34,112 @@ GLuint make_shader();
 GLvoid init_buffer();
 //------------------------------------------------------
 //전역변수
-GLclampf base_r = 0.0f;
-GLclampf base_g = 0.0f;
-GLclampf base_b = 0.0f;
+GLclampf base_r = 01.0f;
+GLclampf base_g = 01.0f;
+GLclampf base_b = 01.0f;
 GLint width{ 800 }, height{ 600 };
 
-Model cube_17;
-Model pyramid_17;
+Model sphere[7];
 
-bool draw_cube = false;
-bool draw_pyramid = false;
-bool is_wired = false;
-bool is_cull = false;
+float center_x;
+float center_y;
+float center_z;
 
-glm::mat4 translate_mat(1.0f);
+float orbit_x[7];
+float orbit_y[7];
+float orbit_z[7];
 
-bool spin_flag = false;
+glm::vec4 mother1(1.0f, 0.0, 0.0f, 1.0f);
+glm::mat4 temp = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+glm::vec4 mother2 = temp * mother1;
+glm::mat4 temp2 = glm::rotate(glm::mat4(1.0f), glm::radians(-45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+glm::vec4 mother3 = temp2 * mother1;
 
-const float cube_color[] = {
-    1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 1.0f,
-    1.0f, 0.0f, 1.0f,
-    0.0f, 0.0f, 0.0f,
-    1.0f, 1.0f, 1.0f,
-};
-
-const float pyramid_color[] = {
-    1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 1.0f,
-};
-
-const float axis[] = {
-    1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-    -1.0f, 0.0f, 0.0, 1.0f, 0.0f, 0.0f,
-
-    0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
-
-    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f,
-    0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f,
-};
-
-float axis_dx{};
-float axis_dy{};
-float dx{};
-float dy{};
-
-float face_dx[6];
-float face_dy[6];
-
-float face_rotatex[6];
-float face_rotatey[6];
-float face_rotatez[6];
-float face_scale[6]{ 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
-
-float for_face_rotate_dx{};
-float for_face_rotate_dy{};
+float rotate_z[7];
+float rotate_y[7];
+float rotate_ys[7];
+float rotate_xy[7];
+float rotate_yx[7];
 
 
-float pyramid_rotate_x[4];
-float pyramid_rotate_y[4];
-float pyramid_rotate_z[4];
-
-float pyramid_dx[4];
-float pyramid_dy[4];
-float pyramid_dz[4];
-
-
-bool top_flag = false;
-bool front_flag = false;
-bool side_flag = false;
-bool back_flag = false;
-
-bool open_flag = false;
-bool open_rotate = false;
-
-int animation_flag = -1;
+float scale[7] = { 0.8f, 0.4f, 0.4f, 0.4f, 0.1f, 0.1f, 0.1f };
 
 bool projection_flag = false;
+bool is_wired = false;
+bool ccw = false;
+int rot_z = 0;
 
-bool pyramid1_flag = false;
-bool pyramid2_flag = false;
+glm::vec3 sphere_color[7] = {
+    glm::vec3(0.0f, 0.0f, 1.0f),
+    glm::vec3(0.0f, 1.0f, 0.0f),
+    glm::vec3(0.0f, 1.0f, 1.0f),
+    glm::vec3(0.0f, 1.0f, 0.5f),
+    glm::vec3(1.0f, 0.0f, 0.0f),
+    glm::vec3(1.0f, 0.5f, 0.0f),
+    glm::vec3(1.0f, 0.1f, 0.0f),
+};
 
-
-int face;
+float orbit[6][360][3];
 //------------------------------------------------------
 //필요한 함수 선언
+void set_sphere() {
+    orbit_x[1] = mother1.x;
+    orbit_y[1] = mother1.y;
+    orbit_z[1] = mother1.z;
 
-void print_model_info(const Model& model) {
-    std::cout << "Total Vertices: " << model.vertex_count << std::endl;
-    for (size_t i = 0; i < model.vertex_count; ++i) {
-        std::cout << "Vertex " << i + 1 << ": ("
-            << model.vertices[i].x << ", "
-            << model.vertices[i].y << ", "
-            << model.vertices[i].z << ")" << std::endl;
-    }
+    orbit_x[2] = mother2.x;
+    orbit_y[2] = mother2.y;
+    orbit_z[2] = mother2.z;
 
-    std::cout << "Total Faces: " << model.face_count << std::endl;
-    for (size_t i = 0; i < model.face_count; ++i) {
-        std::cout << "Face " << i + 1 << ": ("
-            << model.faces[i].v1 + 1 << ", "
-            << model.faces[i].v2 + 1 << ", "
-            << model.faces[i].v3 + 1 << ")" << std::endl;
+    orbit_x[3] = mother3.x;
+    orbit_y[3] = mother3.y;
+    orbit_z[3] = mother3.z;
+
+
+
+}
+
+void make_orbit() {
+    glm::mat4 trans(1.0f);
+    for (int i = 0; i < 360; ++i) {
+        
+        trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(0.0, 1.0, 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+        orbit[0][i][0] = (trans * mother1).x;
+        orbit[0][i][1] = (trans * mother1).y;
+        orbit[0][i][2] = (trans * mother1).z;
     }
-    std::cout << "\n\n\n";
+    glBindBuffer(GL_VERTEX_ARRAY, OBO[0]);
+    glBufferSubData(GL_VERTEX_ARRAY, 0, sizeof(orbit[0]), orbit[0]);
+
+    trans = glm::mat4(1.0f);
+    for (int i = 0; i < 360; ++i) {
+
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(0.0, 1.0, 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+        trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+        orbit[1][i][0] = (trans * mother2).x;
+        orbit[1][i][1] = (trans * mother2).y;
+        orbit[1][i][2] = (trans * mother2).z;
+    }
+    glBindBuffer(GL_VERTEX_ARRAY, OBO[1]);
+    glBufferSubData(GL_VERTEX_ARRAY, 0, sizeof(orbit[1]), orbit[1]);
+
+    trans = glm::mat4(1.0f);
+    for (int i = 0; i < 360; ++i) {
+
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(0.0, 1.0, 0.0));
+        trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+        orbit[2][i][0] = (trans * mother3).x;
+        orbit[2][i][1] = (trans * mother3).y;
+        orbit[2][i][2] = (trans * mother3).z;
+    }
+    glBindBuffer(GL_VERTEX_ARRAY, OBO[2]);
+    glBufferSubData(GL_VERTEX_ARRAY, 0, sizeof(orbit[2]), orbit[2]);
+   
+    
 }
 
 
@@ -163,25 +157,24 @@ void main(int argc, char** argv) {
     make_vertex_shader();
     make_fragment_shader();
     shader_program = make_shader();
-
+    
     glutDisplayFunc(drawScene);
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
     glutSpecialFunc(SpecialKeyboard);
     glutTimerFunc(10, timer, 0);
-    read_obj_file("cube.obj", &cube_17);
-    read_obj_file("pyramid.obj", &pyramid_17);
+    for (int i = 0; i < 7; ++i) {
+        read_obj_file("sphere.obj", &sphere[i]);
+    }
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
 
-
+    make_orbit();
+    set_sphere();
     init_buffer();
 
     glutMainLoop();
 
 }
-
-
-GLUquadricObj* qobj;
 
 GLvoid drawScene(GLvoid) {
 
@@ -191,28 +184,11 @@ GLvoid drawScene(GLvoid) {
     glUseProgram(shader_program);
 
     glValidateProgram(shader_program);
-    GLuint modelLoc2 = glGetUniformLocation(shader_program, "trans");
-    GLuint facloc = glGetUniformLocation(shader_program, "trans_by_face");
 
-    glBindVertexArray(a_axis);
-
-    glm::mat4 temp(1.0f);
-    glUniformMatrix4fv(facloc, 1, GL_FALSE, glm::value_ptr(temp));
-    temp = glm::rotate(temp, glm::radians(30.0f), glm::vec3(1.0, 0.0, 0.0));
-    temp = glm::rotate(temp, glm::radians(30.0f), glm::vec3(0.0, 1.0, 0.0));
-    glUniformMatrix4fv(modelLoc2, 1, GL_FALSE, glm::value_ptr(temp));
+    glEnable(GL_CULL_FACE);
 
 
-    glDrawArrays(GL_LINES, 0, 12);
-
-    if (is_cull) {
-        glEnable(GL_CULL_FACE);
-    }
-    else {
-        glDisable(GL_CULL_FACE);
-    }
-
-    glm::mat4 proj1 = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f);
+    glm::mat4 proj1 = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
     glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
     proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -5.0f));
     GLuint projection = glGetUniformLocation(shader_program, "projection");
@@ -223,63 +199,66 @@ GLvoid drawScene(GLvoid) {
         glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj1));
     }
 
-    glm::mat4 tr_mat = glm::mat4(1.0f);
-    tr_mat = glm::translate(tr_mat, glm::vec3(dx, dy, 0.0f));
-    tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dx), glm::vec3(1.0, 0.0, 0.0));
-    tr_mat = glm::rotate(tr_mat, glm::radians(30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
-    GLuint modloc = glGetUniformLocation(shader_program, "trans");
-    glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat));
+    glm::mat4 trans[7] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+    for (int i = 0; i < 7; ++i) {
+        if (i >= 4)
+        {
 
-    glm::mat4 cube_face_trans[6] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+
+            trans[i] = glm::translate(trans[i], glm::vec3(orbit_x[i], orbit_y[i], orbit_z[i]));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_ys[i]), glm::vec3(0.0, 1.0, 0.0));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_y[i]), glm::vec3(0.0, 1.0, 0.0));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_xy[i]), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_yx[i]), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+            trans[i] = glm::translate(trans[i], glm::vec3(0.5f, 0.0f, 0.0f));
+            trans[i] = glm::scale(trans[i], glm::vec3(scale[i], scale[i], scale[i]));
+        }
+        else {
+            trans[i] = glm::translate(trans[i], glm::vec3(center_x, center_y, center_z));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_ys[i]), glm::vec3(0.0, 1.0, 0.0));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_y[i]), glm::vec3(0.0, 1.0, 0.0));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_xy[i]), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_yx[i]), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+            trans[i] = glm::translate(trans[i], glm::vec3(orbit_x[i], orbit_y[i], orbit_z[i]));
+            trans[i] = glm::scale(trans[i], glm::vec3(scale[i], scale[i], scale[i]));
+        }
+    }
+
+    GLuint color_loc = glGetUniformLocation(shader_program, "in_color");
+    GLuint mod_trans = glGetUniformLocation(shader_program, "trans");
+    if (not is_wired) {
+        for (int ii = 0; ii < 7; ++ii) {
+            glBindVertexArray(VAO[ii]);
+            glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(trans[ii]));
+            glUniform3fv(color_loc, 1, glm::value_ptr(sphere_color[ii]));
+            glDrawElements(GL_TRIANGLES, sphere[ii].face_count * 3, GL_UNSIGNED_INT, 0);
+
+        }
+    }
+    else {
+        for (int ii = 0; ii < 7; ++ii) {
+            glBindVertexArray(VAO[ii]);
+            glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(trans[ii]));
+            glUniform3fv(color_loc, 1, glm::value_ptr(sphere_color[ii]));
+            glDrawElements(GL_LINE_STRIP, sphere[ii].face_count * 3, GL_UNSIGNED_INT, 0);
+
+        }
+    }
+    glm::mat4 temp[6] = {
+        glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),
+    };
+    
     for (int i = 0; i < 6; ++i) {
-        //축소 * 이동 * 이동 * 회전 * 이동
-        cube_face_trans[i] = glm::scale(cube_face_trans[i], glm::vec3(face_scale[i], face_scale[i], face_scale[i]));
-        cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(face_dx[i], face_dy[i], 0.0f));
-        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(face_rotatey[i]), glm::vec3(0.0, 1.0, 0.0));
-        cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(0.0f, -for_face_rotate_dy, -for_face_rotate_dx));
-        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(face_rotatex[i]), glm::vec3(1.0, 0.0, 0.0));
 
-        cube_face_trans[i] = glm::rotate(cube_face_trans[i], glm::radians(face_rotatez[i]), glm::vec3(0.0, 0.0, 1.0));
-        cube_face_trans[i] = glm::translate(cube_face_trans[i], glm::vec3(0.0f, for_face_rotate_dy, for_face_rotate_dx));
     }
-
-    glBindVertexArray(VAO[0]);
-    if (draw_cube) {
-        for (int i = 0; i < cube_17.face_count / 2; ++i) {
-            glUniformMatrix4fv(facloc, 1, GL_FALSE, glm::value_ptr(cube_face_trans[i]));
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(i * sizeof(float) * 6));
-        }
-    }
-    glm::mat4 tr_mat2 = glm::mat4(1.0f);
-    tr_mat2 = glm::translate(tr_mat2, glm::vec3(dx, dy, 0.0f));
-    tr_mat2 = glm::rotate(tr_mat2, glm::radians(30.0f + axis_dx), glm::vec3(1.0, 0.0, 0.0));
-    tr_mat2 = glm::rotate(tr_mat2, glm::radians(30.0f + axis_dy), glm::vec3(0.0, 1.0, 0.0));
-    glUniformMatrix4fv(modloc, 1, GL_FALSE, glm::value_ptr(tr_mat2));
-
-    glm::mat4 pyramid_face[4] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
-    for (int i = 0; i < 4; ++i) {
-        pyramid_face[i] = glm::translate(pyramid_face[i], glm::vec3(-pyramid_dx[i], -pyramid_dy[i], -pyramid_dz[i]));
-        pyramid_face[i] = glm::rotate(pyramid_face[i], glm::radians(pyramid_rotate_x[i]), glm::vec3(1.0f, 0.0f, 0.0f));
-        pyramid_face[i] = glm::rotate(pyramid_face[i], glm::radians(pyramid_rotate_y[i]), glm::vec3(0.0f, 1.0f, 0.0f));
-        pyramid_face[i] = glm::rotate(pyramid_face[i], glm::radians(pyramid_rotate_z[i]), glm::vec3(0.0f, 0.0f, 1.0f));
-        pyramid_face[i] = glm::translate(pyramid_face[i], glm::vec3(pyramid_dx[i], pyramid_dy[i], pyramid_dz[i]));
-    }
-    glm::mat4 p_temp = glm::mat4(1.0f);
-    GLuint pyramid_mat = glGetUniformLocation(shader_program, "trans_by_face");
-    glBindVertexArray(VAO[1]);
-    if (draw_pyramid) {
-        for (int i = 0; i < pyramid_17.face_count; ++i) {
-            //2는 왼쪽 3앞4오5뒤
-            if (i > 1)
-            {
-                glUniformMatrix4fv(pyramid_mat, 1, GL_FALSE, glm::value_ptr(pyramid_face[i - 2]));
-                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i * sizeof(float) * 3));
-            }
-            else {
-                glUniformMatrix4fv(pyramid_mat, 1, GL_FALSE, glm::value_ptr(p_temp));
-                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, (void*)(i * sizeof(float) * 3));
-            }
-        }
+    glm::vec3 tempc(0.0, 0.0, 0.0);
+    
+    glUniform3fv(color_loc, 1, glm::value_ptr(tempc));
+    for (int i = 0; i < 6; ++i) {
+        glBindVertexArray(OAO[i]);
+        glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(temp[i]));
+        glDrawArrays(GL_LINE_STRIP, 0, 360);
     }
 
     glutSwapBuffers();
@@ -290,72 +269,58 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
-    case 'c':
-        draw_cube = !draw_cube;
+    case 'w':
+        center_y += 0.1f;
         break;
 
-    case 'v':
-        draw_pyramid = !draw_pyramid;
+    case 'a':
+        center_x -= 0.1f;
+        break;
+
+    case 's':
+        center_y -= 0.1f;
+        break;
+
+    case 'd':
+        center_x += 0.1f;
         break;
 
     case 'p':
         projection_flag = !projection_flag;
-
         break;
+
+    case 'm':
+        is_wired = !is_wired;
+        break;
+
+    case 'u':
+        center_z += 0.1f;
+        break;
+
+    case 'i':
+        center_z -= 0.1f;
+        break;
+
     case 'y':
-        spin_flag = !spin_flag;
-        break;
-    case 't':
-        //2가 윗면
-        top_flag = !top_flag;
+        ccw = !ccw;
         break;
 
-    case 'f':
-        //5가 앞면
-        front_flag = !front_flag;
+    case 'z':
+        if (rot_z < 2) {
+            ++rot_z;
+        }
+        else {
+            rot_z = 0;
+        }
         break;
-
-    case 's':
-        //1, 3;
-        side_flag = !side_flag;
-        break;
-
-    case 'b':
-        //0이 뒤
-        back_flag = !back_flag;
-        break;
-
-    case 'h':
-        is_cull = !is_cull;
-
-        break;
-
-    case 'o':
-        pyramid1_flag = !pyramid1_flag;
-        break;
-
-    case 'r':
-        pyramid2_flag = !pyramid2_flag;
-        break;
-
     case 'q':
         glutLeaveMainLoop();
         break;
 
-    case '1':
-        face_scale[1] -= 0.1f;
-        break;
-
-    case '2':
-
         break;
     }
 
 
-    if ('1' <= key && key <= '6') {
-        face = key - '1';
-
-    }
 
     glutPostRedisplay();
 }
@@ -434,200 +399,112 @@ GLuint make_shader() {
 }
 
 GLvoid init_buffer() {
-    glGenVertexArrays(1, &VAO[0]);
-    glBindVertexArray(VAO[0]);
+    for (int i = 0; i < 7;++i) {
+        glGenVertexArrays(1, &VAO[i]);
+        glBindVertexArray(VAO[i]);
 
-    glGenBuffers(1, &VBO[0]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[0]);
-    glBufferData(GL_ARRAY_BUFFER, cube_17.vertex_count * sizeof(Vertex), cube_17.vertices, GL_STATIC_DRAW);
+        glGenBuffers(1, &VBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, sphere[i].vertex_count * sizeof(Vertex), sphere[i].vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+        glEnableVertexAttribArray(0);
 
-    glGenBuffers(1, &EBO[0]);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, cube_17.face_count * sizeof(Face), cube_17.faces, GL_STATIC_DRAW);
+        glGenBuffers(1, &EBO[i]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[i]);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphere[i].face_count * sizeof(Face), sphere[i].faces, GL_STATIC_DRAW);
 
-    glGenBuffers(1, &CBO[0]);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
+    }
+    for (int i = 0; i < 6; ++i) {
+        glGenVertexArrays(1, &OAO[i]);
+        glBindVertexArray(OAO[i]);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
-    glEnableVertexAttribArray(1);
+        glGenBuffers(1, &OBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, OBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * 360, orbit[i], GL_STATIC_DRAW);
 
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+        glEnableVertexAttribArray(0);
 
-
-
-    glGenVertexArrays(1, &VAO[1]);
-    glBindVertexArray(VAO[1]);
-
-    glGenBuffers(1, &VBO[1]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, pyramid_17.vertex_count * sizeof(Vertex), pyramid_17.vertices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-    glEnableVertexAttribArray(0);
-    glGenBuffers(1, &CBO[1]);
-    glBindBuffer(GL_ARRAY_BUFFER, CBO[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramid_color), pyramid_color, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
-    glEnableVertexAttribArray(1);
-
-    glGenBuffers(1, &EBO[1]);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[1]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, pyramid_17.face_count * sizeof(Face), pyramid_17.faces, GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &a_axis);
-    glBindVertexArray(a_axis);
-
-    glGenBuffers(1, &b_axis);
-    glBindBuffer(GL_ARRAY_BUFFER, b_axis);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(axis), axis, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
+    }
 }
 GLvoid SpecialKeyboard(int key, int x, int y) {
-    switch (key) {
-    case GLUT_KEY_UP:
-        dy += 0.1f;
 
-        break;
-
-    case GLUT_KEY_DOWN:
-        dy -= 0.1f;
-
-        break;
-    case GLUT_KEY_LEFT:
-        dx -= 0.1f;
-
-        break;
-    case GLUT_KEY_RIGHT:
-        dx += 0.1f;
-
-    default:
-
-        break;
-    }
     glutPostRedisplay();
 }
 GLvoid timer(int value) {
-    if (spin_flag) {
-        axis_dy += 5.0f;
+
+    glm::mat4 trans[7] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+    for (int i = 0; i < 7; ++i) {
+        
+        trans[i] = glm::translate(trans[i], glm::vec3(center_x, center_y, center_z));
+        trans[i] = glm::rotate(trans[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
+        trans[i] = glm::rotate(trans[i], glm::radians(rotate_y[i]), glm::vec3(0.0, 1.0, 0.0));
+        trans[i] = glm::rotate(trans[i], glm::radians(rotate_xy[i]), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+        trans[i] = glm::rotate(trans[i], glm::radians(rotate_yx[i]), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
     }
-    if (top_flag) {
-        face_rotatey[2] += 2.0f;
+    
+    if(not ccw){
+
+        rotate_y[1] += 1.0f;
+        rotate_yx[2] += 1.5f;
+        rotate_xy[3] += 1.3f;
+
+        orbit_x[4] = (trans[1] * mother1).x;
+        orbit_y[4] = (trans[1] * mother1).y;
+        orbit_z[4] = (trans[1] * mother1).z;
+        rotate_y[4] += 4.0f;
+
+
+        orbit_x[5] = (trans[2] * mother2).x;
+        orbit_y[5] = (trans[2] * mother2).y;
+        orbit_z[5] = (trans[2] * mother2).z;
+        rotate_y[5] += 5.0f;
+
+
+
+        orbit_x[6] = (trans[3] * mother3).x;
+        orbit_y[6] = (trans[3] * mother3).y;
+        orbit_z[6] = (trans[3] * mother3).z;
+        rotate_y[6] += 6.0f;
     }
-    if (back_flag) {
-        if (face_scale[0] > 0.0f) {
-            face_scale[0] -= 0.1f;
+    else {
+        rotate_y[1] -= 1.0f;
+        rotate_yx[2] -= 1.5f;
+        rotate_xy[3] -= 1.3f;
+
+
+        orbit_x[4] = (trans[1] * mother1).x;
+        orbit_y[4] = (trans[1] * mother1).y;
+        orbit_z[4] = (trans[1] * mother1).z;
+        rotate_y[4] -= 4.0f;
+
+
+        orbit_x[5] = (trans[2] * mother2).x;
+        orbit_y[5] = (trans[2] * mother2).y;
+        orbit_z[5] = (trans[2] * mother2).z;
+        rotate_y[5] -= 5.0f;
+
+
+
+        orbit_x[6] = (trans[3] * mother3).x;
+        orbit_y[6] = (trans[3] * mother3).y;
+        orbit_z[6] = (trans[3] * mother3).z;
+        rotate_y[6] -= 6.0f;
+    }
+    if (rot_z == 1) {
+        for(int i=1;i<7;++i){
+            rotate_z[i] += 1.0f;
+        }
+    }
+    else if(rot_z==2){
+        for (int i = 1; i < 7; ++i) {
+            rotate_z[i] -= 1.0f;
         }
     }
     else {
-        if (face_scale[0] < 1.0f) {
-            face_scale[0] += 0.1f;
-        }
-    }
 
-    if (side_flag) {
-        if (face_dy[1] < 0.5f && face_dy[3] < 0.5f) {
-            face_dy[1] += 0.1f;
-            face_dy[3] += 0.1f;
-        }
-    }
-    else {
-        if (face_dy[1] > 0.1f && face_dy[3] > 0.1f) {
-            face_dy[1] -= 0.1f;
-            face_dy[3] -= 0.1f;
-        }
-    }
-    if (front_flag) {
-        for_face_rotate_dx = -0.25f;
-        for_face_rotate_dy = 0.25f;
-        if (face_rotatex[5] < 90.0f) {
-            face_rotatex[5] += 5.0f;
-        }
-    }
-    else {
-        for_face_rotate_dx = -0.25f;
-        for_face_rotate_dy = 0.25f;
-        if (face_rotatex[5] > 0.0f) {
-            face_rotatex[5] -= 5.0f;
-        }
-    }
 
-    if (pyramid1_flag) {
-        //2왼3앞4오5뒤
-        if (pyramid_rotate_z[0] < 233 && pyramid_rotate_x[1]<233 && pyramid_rotate_z[2] > -233 && pyramid_rotate_x[3] > -233) {
-            pyramid_dx[0] = 0.25;
-            pyramid_dy[0] = 0.25;
-            pyramid_rotate_z[0] += 1.0f;
-
-            pyramid_dz[1] = -0.25;
-            pyramid_dy[1] = 0.25;
-            pyramid_rotate_x[1] += 1.0f;
-
-            pyramid_dx[2] = -0.25;
-            pyramid_dy[2] = 0.25;
-            pyramid_rotate_z[2] -= 1.0f;
-
-            pyramid_dz[3] = 0.25;
-            pyramid_dy[3] = 0.25;
-            pyramid_rotate_x[3] -= 1.0f;
-        }
-    }
-    else if (not pyramid2_flag) {
-        if (pyramid_rotate_z[0] > 0 && pyramid_rotate_x[1] > 0 && pyramid_rotate_z[2] < 0 && pyramid_rotate_x[3] < 0) {
-            pyramid_rotate_z[0] -= 1.0f;
-            pyramid_rotate_x[1] -= 1.0f;
-            pyramid_rotate_z[2] += 1.0f;
-            pyramid_rotate_x[3] += 1.0f;
-        }
-    }
-    if (pyramid2_flag) {
-        if (pyramid_rotate_z[0] < 90) {
-            pyramid_dx[0] = 0.25;
-            pyramid_dy[0] = 0.25;
-            pyramid_rotate_z[0] += 1.0f;
-        }
-        if (pyramid_rotate_z[0] > 85 && pyramid_rotate_x[1] < 90) {
-
-            pyramid_dz[1] = -0.25;
-            pyramid_dy[1] = 0.25;
-            pyramid_rotate_x[1] += 1.0f;
-
-        }
-        if (pyramid_rotate_x[1] > 85 && pyramid_rotate_z[2] > -90) {
-
-            pyramid_dx[2] = -0.25;
-            pyramid_dy[2] = 0.25;
-            pyramid_rotate_z[2] -= 1.0f;
-
-        }
-        if (pyramid_rotate_z[2] < -85 && pyramid_rotate_x[3] > -90) {
-            pyramid_dz[3] = 0.25;
-            pyramid_dy[3] = 0.25;
-            pyramid_rotate_x[3] -= 1.0f;
-        }
-    }
-    else if (not pyramid1_flag) {
-        if (pyramid_rotate_z[0] > 0) {
-            pyramid_rotate_z[0] -= 1.0f;
-        }
-        if (pyramid_rotate_x[1] > 0) {
-            pyramid_rotate_x[1] -= 1.0f;
-        }
-        if (pyramid_rotate_z[2] < 0) {
-            pyramid_rotate_z[2] += 1.0f;
-        }
-        if (pyramid_rotate_x[3] < 0) {
-            pyramid_rotate_x[3] += 1.0f;
-
-        }
     }
 
     glutPostRedisplay();

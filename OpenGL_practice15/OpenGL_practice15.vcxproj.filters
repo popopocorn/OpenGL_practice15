@@ -117,6 +117,12 @@
     <None Include="17_Fragment_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="18_Vertex_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="18_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Object Include="cube.obj">
