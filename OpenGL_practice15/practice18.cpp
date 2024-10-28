@@ -297,8 +297,10 @@ GLvoid drawScene(GLvoid) {
         temp[i] = glm::rotate(temp[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
     }
     for (int i = 3; i < 6; ++i) {
+        
         temp[i] = glm::translate(temp[i], glm::vec3(orbit_x[i+1], orbit_y[i+1], orbit_z[i+1]));
-        trans[i] = glm::rotate(trans[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
+        temp[i] = glm::rotate(temp[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
+        
     }
 
     glm::vec3 tempc(0.0, 0.0, 0.0);
