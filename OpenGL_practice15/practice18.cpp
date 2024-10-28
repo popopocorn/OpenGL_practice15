@@ -139,7 +139,46 @@ void make_orbit() {
     glBindBuffer(GL_VERTEX_ARRAY, OBO[2]);
     glBufferSubData(GL_VERTEX_ARRAY, 0, sizeof(orbit[2]), orbit[2]);
    
-    
+    trans = glm::mat4(1.0f);
+    glm::vec4 temp(0.5f, 0.0f, 0.0, 0.0);
+    for (int i = 0; i < 360; ++i) {
+
+        trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(0.0, 1.0, 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+        orbit[3][i][0] = (trans * temp).x;
+        orbit[3][i][1] = (trans * temp).y;
+        orbit[3][i][2] = (trans * temp).z;
+    }
+    glBindBuffer(GL_VERTEX_ARRAY, OBO[3]);
+    glBufferSubData(GL_VERTEX_ARRAY, 0, sizeof(orbit[3]), orbit[3]);
+
+    trans = glm::mat4(1.0f);
+    temp = glm::vec4(0.5f, 0.0, 0.0, 0.0);
+    for (int i = 0; i < 360; ++i) {
+
+        trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(0.0, 1.0, 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+        orbit[4][i][0] = (trans * temp).x;
+        orbit[4][i][1] = (trans * temp).y;
+        orbit[4][i][2] = (trans * temp).z;
+    }
+    glBindBuffer(GL_VERTEX_ARRAY, OBO[3]);
+    glBufferSubData(GL_VERTEX_ARRAY, 0, sizeof(orbit[4]), orbit[4]);
+    trans = glm::mat4(1.0f);
+    temp = glm::vec4(0.5f, 0.0, 0.0, 0.0);
+    for (int i = 0; i < 360; ++i) {
+
+        trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(0.0, 1.0, 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
+        //trans = glm::rotate(trans, glm::radians(float(i)), glm::vec3(-sqrt(2.0), sqrt(2.0), 0.0));
+        orbit[5][i][0] = (trans * temp).x;
+        orbit[5][i][1] = (trans * temp).y;
+        orbit[5][i][2] = (trans * temp).z;
+    }
+    glBindBuffer(GL_VERTEX_ARRAY, OBO[3]);
+    glBufferSubData(GL_VERTEX_ARRAY, 0, sizeof(orbit[5]), orbit[5]);
 }
 
 
@@ -189,8 +228,11 @@ GLvoid drawScene(GLvoid) {
 
 
     glm::mat4 proj1 = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
+    proj1 = glm::rotate(proj1, glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
     proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -5.0f));
+    proj2 = glm::rotate(proj2, glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    
     GLuint projection = glGetUniformLocation(shader_program, "projection");
     if (projection_flag) {
         glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj2));
@@ -204,8 +246,9 @@ GLvoid drawScene(GLvoid) {
         if (i >= 4)
         {
 
-
+            
             trans[i] = glm::translate(trans[i], glm::vec3(orbit_x[i], orbit_y[i], orbit_z[i]));
+            trans[i] = glm::rotate(trans[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
             trans[i] = glm::rotate(trans[i], glm::radians(rotate_ys[i]), glm::vec3(0.0, 1.0, 0.0));
             trans[i] = glm::rotate(trans[i], glm::radians(rotate_y[i]), glm::vec3(0.0, 1.0, 0.0));
             trans[i] = glm::rotate(trans[i], glm::radians(rotate_xy[i]), glm::vec3(sqrt(2.0), sqrt(2.0), 0.0));
@@ -249,16 +292,33 @@ GLvoid drawScene(GLvoid) {
         glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),
     };
     
-    for (int i = 0; i < 6; ++i) {
-
+    for (int i = 0; i < 3; ++i) {
+        temp[i] = glm::translate(temp[i], glm::vec3(center_x, center_y, center_z));
+        temp[i] = glm::rotate(temp[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
     }
+    for (int i = 3; i < 6; ++i) {
+        temp[i] = glm::translate(temp[i], glm::vec3(orbit_x[i+1], orbit_y[i+1], orbit_z[i+1]));
+        trans[i] = glm::rotate(trans[i], glm::radians(rotate_z[i]), glm::vec3(0.0, 0.0, 1.0));
+    }
+
     glm::vec3 tempc(0.0, 0.0, 0.0);
     
     glUniform3fv(color_loc, 1, glm::value_ptr(tempc));
     for (int i = 0; i < 6; ++i) {
-        glBindVertexArray(OAO[i]);
-        glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(temp[i]));
-        glDrawArrays(GL_LINE_STRIP, 0, 360);
+        if(i<3){
+            for(int ii=0;ii<359;++ii){
+                glBindVertexArray(OAO[i]);
+                glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(temp[1]));
+                glDrawArrays(GL_LINES, ii, ii+1);
+            }
+        }
+        else {
+            for(int ii=0;ii<359;++ii){
+                glBindVertexArray(OAO[i]);
+                glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(temp[i]));
+                glDrawArrays(GL_LINES, ii, ii+1);
+            }
+        }
     }
 
     glutSwapBuffers();
