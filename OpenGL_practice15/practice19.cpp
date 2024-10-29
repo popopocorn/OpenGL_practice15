@@ -43,26 +43,40 @@ Model body[7];
 
 int flag_move_x{};
 int flag_rotate_y{};
-int flag_barrel_rotate{};
+bool flag_barrel_rotate{};
 bool flag_barrel_merge{};
-int flag_arm_rotate{};
+bool flag_arm_rotate{};
 
 float camera_x;
 float camera_y;
-float camera_z{5.0f};
-float dir_x;
-float dir_y;
-float dir_z{ -1.0f };
+float camera_z;
+
+
 
 float camera_angle{};
+float rotate_angle{};
 
 float center_x;
 float center_y;
 float center_z;
 
-float scale_x[6];
-float scale_y[6];
-float scale_z[6];
+float scale_x[6]{ 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
+float scale_y[6]{ 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
+float scale_z[6]{ 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
+
+float trans_x[6];
+float trans_y[6];
+float trans_z[6];
+
+
+float rotate_y[6];
+float rotate_z[6];
+
+float temp_a{};
+
+float first_x[6];
+float first_y[6];
+float first_z[6];
 
 const float cube_color[] = {
     1.0f, 0.0f, 0.0f,
@@ -77,6 +91,90 @@ const float cube_color[] = {
 
 //------------------------------------------------------
 //필요한 함수 선언
+void set_cube() {
+
+    flag_move_x = 0;
+    flag_rotate_y = 0;
+    flag_barrel_rotate = false;
+    flag_barrel_merge = false;
+    flag_arm_rotate = false;
+
+    camera_x = 0;
+    camera_y = 0;
+    camera_z = 0;
+
+    camera_angle = 0;
+    rotate_angle = 0;
+
+    center_x = 0;
+    center_y = 0;
+    center_z = 0;
+
+    for (int i = 0; i < 6;++i) {
+        scale_x[i] = 1.0f;
+        scale_y[i] = 1.0f;
+        scale_z[i] = 1.0f;
+
+        trans_x[i]=0;
+        trans_y[i] = 0;
+        trans_z[i] = 0;
+
+
+        rotate_y[i] = 0;
+        rotate_z[i] = 0;
+
+        
+
+        first_x[i] = 0;
+        first_y[i] = 0;
+        first_z[i] = 0;
+    }
+
+    temp_a = 0;
+
+
+    //몸통
+    scale_x[0] = 5.0f;
+    scale_y[0] = 2.0f;
+    scale_z[0] = 5.0f;
+
+
+    //포신
+    scale_x[1] = 0.5f;
+    scale_y[1] = 0.5f;
+    scale_z[1] = 2.5f;
+
+    scale_x[2] = 0.5f;
+    scale_y[2] = 0.5f;
+    scale_z[2] = 2.5f;
+
+    first_z[1] = 1.5f;
+    first_z[2] = 1.5f;
+    first_y[1] = -0.1f;
+    first_y[2] = -0.1f;
+    first_x[1] = 1.0f;
+    first_x[2] = -1.0f;
+
+    //중간몸통
+    scale_x[3] = 2.5f;
+    scale_y[3] = 1.5f;
+    scale_z[3] = 2.5f;
+    first_y[3] = 0.8f;
+
+    //팔
+    scale_x[4] = 0.5f;
+    scale_y[4] = 2.5f;
+    scale_z[4] = 0.5f;
+
+    scale_x[5] = 0.5f;
+    scale_y[5] = 2.5f;
+    scale_z[5] = 0.5f;
+    
+    first_y[4] = 1.4f;
+    first_y[5] = 1.4f;
+    first_x[4] = 0.35;
+    first_x[5] = -0.35;
+}
 
 
 
@@ -106,7 +204,7 @@ void main(int argc, char** argv) {
     }
 
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
-
+    set_cube();
     init_buffer();
 
     glutMainLoop();
@@ -126,21 +224,21 @@ GLvoid drawScene(GLvoid) {
 
     glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
 
-    proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -5.0f));
+    proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -10.0f));
 
     glm::mat4 view(1.0f);
 
-    glm::vec3 camera_pos(0.0f, 0.0f, 5.0f);
-    glm::vec3 camera_dir(dir_x, dir_y, dir_z);
+    glm::vec3 camera_pos(0.0f, 0.0f, 0.0f);
+    glm::vec3 camera_target(0.0, 0.0, -1.0);
     glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
-
-    glm::vec4 rotate_target(camera_dir.x, camera_dir.y, camera_dir.z, 1.0f);
-    glm::mat4 camera_rotate(1.0f);
-    view = glm::lookAt(camera_pos, camera_dir, camera_up);
-    view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z));
-    view = glm::rotate(view, glm::radians(camera_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::lookAt(camera_pos, camera_target, camera_up);
     
-
+    view = glm::rotate(view, glm::radians(30.0f+temp_a), glm::vec3(1.0f, 0.0f, 0.0f));
+    view = glm::rotate(view, glm::radians(camera_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, 10.0f));
+    view = glm::rotate(view, glm::radians(rotate_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
     GLuint projection = glGetUniformLocation(shader_program, "projection");
     GLuint trans_mat = glGetUniformLocation(shader_program, "trans");
@@ -156,7 +254,11 @@ GLvoid drawScene(GLvoid) {
 
     glm::mat4 cube_trans[6]={glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
     for (int i = 0; i < 6; ++i) {
-        //cube_trans[i] = glm::scale(cube_trans[i], glm::vec3());
+        cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(trans_x[0], trans_y[0], trans_z[0]));
+        cube_trans[i] = glm::rotate(cube_trans[i], glm::radians(rotate_y[i]), glm::vec3(0.0f, 1.0f, 0.0f));
+        cube_trans[i] = glm::rotate(cube_trans[i], glm::radians(rotate_z[i]), glm::vec3(0.0f, 0.0f, 1.0f));
+        cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(first_x[i], first_y[i], first_z[i]));
+        cube_trans[i] = glm::scale(cube_trans[i], glm::vec3(scale_x[i], scale_y[i], scale_z[i]));
     }
 
 
@@ -186,18 +288,36 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
-    case 'y':
+    case 'r':
         camera_angle += 1.0f;
+        break;
+
+    case 'R':
+        camera_angle -= 1.0f;
+        break;
+    case 'y':
+        rotate_angle += 1.0f;
+        break;
+
+    case 'Y':
+        rotate_angle -= 1.0f;
+        break;
+    case 'u':
+        temp_a += 1.0f;
+        break;
+
+    case 'U':
+        temp_a -= 1.0f;
         break;
 
     case 'x':
         camera_x -= 0.1f;
-        dir_x -= 0.1f;
+        
         break;
 
     case 'X':
         camera_x += 0.1f;
-        dir_x += 0.1f;
+        
         break;
 
     case 'z':
@@ -210,7 +330,51 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         
         break;
 
+    case 'b':
+        if(flag_move_x !=1)
+            flag_move_x = 1;
+        else
+            flag_move_x = 0;
+        break;
 
+    case 'B':
+        if (flag_move_x != 2)
+            flag_move_x = 2;
+        else 
+            flag_move_x = 0;
+        break;
+
+    case 'm':
+        if (flag_rotate_y != 1)
+            flag_rotate_y = 1;
+        else
+            flag_rotate_y = 0;
+        break;
+
+    case 'M':
+        if (flag_rotate_y != 2)
+            flag_rotate_y = 2;
+        else
+            flag_rotate_y = 0;
+        break;
+
+    case 'f':
+        flag_barrel_rotate = !flag_barrel_rotate;
+        break;
+
+    case 'e':
+        flag_barrel_merge = !flag_barrel_merge;
+
+        break;
+
+    case 't':
+        flag_arm_rotate = !flag_arm_rotate;
+
+        break;
+
+    case'c':
+        set_cube();
+        break;
     case 'q':
         glutLeaveMainLoop();
         break;
@@ -327,8 +491,75 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
     glutPostRedisplay();
 }
 GLvoid timer(int value) {
+    /*
+    int flag_move_x{};
+    int flag_rotate_y{};
+    int flag_barrel_rotate{};
+    bool flag_barrel_merge{};
+    int flag_arm_rotate{};
+    */
+    if (flag_move_x == 1) {
+        trans_x[0] += 0.1f;
+    }
+    else if (flag_move_x == 2) {
+        trans_x[0] -= 0.1f;
+    }
+    if (flag_rotate_y == 1) {
+        rotate_y[3] += 1.0f;
+        rotate_y[4] += 1.0f;
+        rotate_y[5] += 1.0f;
+    }
+    else if (flag_rotate_y == 2) {
+        rotate_y[3] -= 1.0f;
+        rotate_y[4] -= 1.0f;
+        rotate_y[5] -= 1.0f;
+    }
+    if (flag_barrel_rotate) {
+        rotate_y[1] += 1.0f;
 
+        rotate_y[2] -= 1.0f;
+    }
 
+    if (flag_barrel_merge) {
+        if (int(rotate_y[1]) % 360 != 0) {
+            rotate_y[1] += 1.0f;
+        }
+        if (int(rotate_y[2]) % 360 != 0) {
+            rotate_y[2] -= 1.0f;
+        }
+        if (int(rotate_y[1]) % 360 == 0 && int(rotate_y[2]) % 360 == 0) {
+            if (first_x[1] > 0) {
+                first_x[1] = ((first_x[1] * 10) - 1) / 10;
+            }
+            if (first_x[2] < 0) {
+                first_x[2] = ((first_x[2] * 10) + 1) / 10;
+            }
+        }
+    }
+    else {
+        if (first_x[1] < 1.0f) {
+            first_x[1] = ((first_x[1] * 10) + 1) / 10;
+        }
+        if (first_x[2] > -1.0f) {
+            first_x[2] = ((first_x[2] * 10) - 1) / 10;
+        }
+    }
+    if (flag_arm_rotate) {
+        if (rotate_z[4] > -90) {
+            rotate_z[4] -= 1.0f;
+        }
+        if (rotate_z[5] < 90) {
+            rotate_z[5] += 1.0f;
+        }
+    }
+    else {
+        if (rotate_z[4] < 0) {
+            rotate_z[4] += 1.0f;
+        }
+        if (rotate_z[5] > 0) {
+            rotate_z[5] -= 1.0f;
+        }
+    }
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);
 }
