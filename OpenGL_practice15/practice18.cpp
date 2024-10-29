@@ -228,10 +228,10 @@ GLvoid drawScene(GLvoid) {
 
 
     glm::mat4 proj1 = glm::ortho(-2.0f, 2.0f, -2.0f, 2.0f, -2.0f, 2.0f);
-    proj1 = glm::rotate(proj1, glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    //proj1 = glm::rotate(proj1, glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
     proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -5.0f));
-    proj2 = glm::rotate(proj2, glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+    //proj2 = glm::rotate(proj2, glm::radians(30.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     
     GLuint projection = glGetUniformLocation(shader_program, "projection");
     if (projection_flag) {
@@ -311,14 +311,14 @@ GLvoid drawScene(GLvoid) {
             for(int ii=0;ii<359;++ii){
                 glBindVertexArray(OAO[i]);
                 glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(temp[1]));
-                glDrawArrays(GL_LINES, ii, ii+1);
+                glDrawArrays(GL_LINE_LOOP, ii, 2);
             }
         }
         else {
             for(int ii=0;ii<359;++ii){
                 glBindVertexArray(OAO[i]);
                 glUniformMatrix4fv(mod_trans, 1, GL_FALSE, glm::value_ptr(temp[i]));
-                glDrawArrays(GL_LINES, ii, ii+1);
+                glDrawArrays(GL_LINE_LOOP, ii, 2);
             }
         }
     }
