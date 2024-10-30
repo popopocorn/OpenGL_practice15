@@ -9,11 +9,12 @@
 #include"read_obj.h"
 #include<vector>
 //미리 선언할거
-#define vertex_shader_code "19_Vertex_shader.glsl"
+#define vertex_shader_code "20_Vertex_shader.glsl"
 #define fragment_shader_code "19_Fragment_shader.glsl"
 
 //------------------------------------------------------
 //콜백함수
+GLvoid MyDisplay();
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
@@ -41,7 +42,7 @@ GLint width{ 800 }, height{ 600 };
 Model body[7];
 
 
-int flag_move_x{};
+bool flag_move_x{};
 int flag_rotate_y{};
 bool flag_barrel_rotate{};
 bool flag_barrel_merge{};
@@ -69,6 +70,7 @@ float trans_x[6];
 float trans_y[6];
 float trans_z[6];
 
+float transdx = 0.1f;
 
 float rotate_y[6];
 float rotate_x[6];
@@ -79,7 +81,7 @@ float first_x[6];
 float first_y[6];
 float first_z[6];
 
-float rotate_arm_dx[] = {-1.0f, 1.0f};
+float rotate_arm_dx[] = { -1.0f, 1.0f };
 
 const float cube_color[] = {
     1.0f, 0.0f, 0.0f,
@@ -96,7 +98,7 @@ const float cube_color[] = {
 //필요한 함수 선언
 void set_cube() {
 
-    flag_move_x = 0;
+    flag_move_x = false;
     flag_rotate_y = 0;
     flag_barrel_rotate = false;
     flag_barrel_merge = false;
@@ -113,12 +115,12 @@ void set_cube() {
     center_y = 0;
     center_z = 0;
 
-    for (int i = 0; i < 6;++i) {
+    for (int i = 0; i < 6; ++i) {
         scale_x[i] = 1.0f;
         scale_y[i] = 1.0f;
         scale_z[i] = 1.0f;
 
-        trans_x[i]=0;
+        trans_x[i] = 0;
         trans_y[i] = 0;
         trans_z[i] = 0;
 
@@ -126,7 +128,7 @@ void set_cube() {
         rotate_y[i] = 0;
         rotate_x[i] = 0;
 
-        
+
 
         first_x[i] = 0;
         first_y[i] = 0;
@@ -172,11 +174,13 @@ void set_cube() {
     scale_x[5] = 0.5f;
     scale_y[5] = 2.5f;
     scale_z[5] = 0.5f;
-    
-    first_y[4] = 1.4f;
-    first_y[5] = 1.4f;
+
+    first_y[4] = 0.5f;
+    first_y[5] = 0.5f;
     first_x[4] = 0.35;
     first_x[5] = -0.35;
+    trans_y[4] = 1.0f;
+    trans_y[5] = 1.0f;
 }
 
 
@@ -196,7 +200,7 @@ void main(int argc, char** argv) {
     make_fragment_shader();
     shader_program = make_shader();
 
-    glutDisplayFunc(drawScene);
+    glutDisplayFunc(MyDisplay);
     glutReshapeFunc(Reshape);
     glutKeyboardFunc(Keyboard);
     glutSpecialFunc(SpecialKeyboard);
@@ -216,40 +220,26 @@ void main(int argc, char** argv) {
 
 GLvoid drawScene(GLvoid) {
 
-    glClearColor(base_r, base_g, base_b, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glUseProgram(shader_program);
-
-    glValidateProgram(shader_program);
-
-    glEnable(GL_CULL_FACE);
-
-    glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
-
-    proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -10.0f));
-
-    glm::mat4 proj1 = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
-
+    
     glm::mat4 view(1.0f);
 
     glm::vec3 camera_pos(0.0f, 0.0f, 0.0f);
     glm::vec3 camera_target(0.0, 0.0, -1.0);
     glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
     view = glm::lookAt(camera_pos, camera_target, camera_up);
-    
-    view = glm::rotate(view, glm::radians(30.0f+temp_a), glm::vec3(1.0f, 0.0f, 0.0f));
+
+    view = glm::rotate(view, glm::radians(30.0f + temp_a), glm::vec3(1.0f, 0.0f, 0.0f));
     view = glm::rotate(view, glm::radians(camera_angle), glm::vec3(0.0f, 1.0f, 0.0f));
     view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z));
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, 10.0f));
     view = glm::rotate(view, glm::radians(rotate_angle), glm::vec3(0.0f, 1.0f, 0.0f));
     view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
-    GLuint projection = glGetUniformLocation(shader_program, "projection");
+    
     GLuint trans_mat = glGetUniformLocation(shader_program, "trans");
 
     glUniformMatrix4fv(view_mat, 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj2));
+    
 
     glm::mat4 temp(1.0f);
     glm::mat4 plane_trans(1.0f);
@@ -257,9 +247,10 @@ GLvoid drawScene(GLvoid) {
     plane_trans = glm::scale(plane_trans, glm::vec3(25.0f, 1.0f, 25.0f));
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(plane_trans));
 
-    glm::mat4 cube_trans[6]={glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
+    glm::mat4 cube_trans[6] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
     for (int i = 0; i < 6; ++i) {
-        cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(trans_x[0], trans_y[0], trans_z[0]));
+        //cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(trans_x[0], trans_y[0], trans_z[0]));
+        cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(trans_x[0], trans_y[i], trans_z[i]));
         cube_trans[i] = glm::rotate(cube_trans[i], glm::radians(rotate_y[i]), glm::vec3(0.0f, 1.0f, 0.0f));
         cube_trans[i] = glm::rotate(cube_trans[i], glm::radians(rotate_x[i]), glm::vec3(1.0f, 0.0f, 0.0f));
         cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(first_x[i], first_y[i], first_z[i]));
@@ -267,23 +258,50 @@ GLvoid drawScene(GLvoid) {
     }
 
 
-    for(int i=0;i<7;++i){
+    for (int i = 0; i < 7; ++i) {
         glBindVertexArray(VAO[i]);
-        if(i==0){
+        if (i == 0) {
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(plane_trans));
             glDrawElements(GL_TRIANGLES, body[i].face_count * 3, GL_UNSIGNED_INT, 0);
         }
         else {
-            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(cube_trans[i-1]));
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(cube_trans[i - 1]));
             glDrawElements(GL_TRIANGLES, body[i].face_count * 3, GL_UNSIGNED_INT, 0);
         }
     }
 
     
+}
 
+GLvoid MyDisplay() {
+    glClearColor(base_r, base_g, base_b, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glUseProgram(shader_program);
 
+    glValidateProgram(shader_program);
 
+    //glEnable(GL_CULL_FACE);
+
+    glViewport(0, 0, width / 2, height / 2);
+    glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
+    GLuint projection = glGetUniformLocation(shader_program, "projection");
+    proj2 = glm::translate(proj2, glm::vec3(0.0f, 0.0f, -20.0f));
+    proj2 = glm::rotate(proj2, glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj2));
+    drawScene();
+    
+    glViewport(width / 2, 0, width/2, height / 2);
+    glm::mat4 proj1 = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -10.0f, 10.0f);
+    //proj1 = glm::rotate(proj1, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj1));
+    drawScene();
+
+    glViewport(width / 2, height/2, width / 2, height / 2);
+    
+    proj1 = glm::rotate(proj1, glm::radians(90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj1));
+    drawScene();
 
     glutSwapBuffers();
 }
@@ -317,37 +335,28 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
 
     case 'x':
         camera_x -= 0.1f;
-        
+
         break;
 
     case 'X':
         camera_x += 0.1f;
-        
+
         break;
 
     case 'z':
         camera_z += 0.1f;
-        std::cout << camera_z << std::endl;
+
         break;
 
     case 'Z':
         camera_z -= 0.1f;
-        std::cout << camera_z << std::endl;
+
         break;
 
     case 'b':
-        if(flag_move_x !=1)
-            flag_move_x = 1;
-        else
-            flag_move_x = 0;
+        flag_move_x = !flag_move_x;
         break;
 
-    case 'B':
-        if (flag_move_x != 2)
-            flag_move_x = 2;
-        else 
-            flag_move_x = 0;
-        break;
 
     case 'm':
         if (flag_rotate_y != 1)
@@ -508,12 +517,15 @@ GLvoid timer(int value) {
     bool flag_barrel_merge{};
     int flag_arm_rotate{};
     */
-    if (flag_move_x == 1) {
-        trans_x[0] += 0.1f;
-    }
-    else if (flag_move_x == 2) {
-        trans_x[0] -= 0.1f;
-    }
+    if (flag_move_x) {
+        trans_x[0] += transdx;
+        if (trans_x[0] > 3.0f) {
+            transdx = -0.1f;
+        }
+        if (trans_x[0] < -3.0f) {
+            transdx = 0.1f;
+        }
+   }
     if (flag_rotate_y == 1) {
         rotate_y[3] += 1.0f;
         rotate_y[4] += 1.0f;
@@ -570,7 +582,7 @@ GLvoid timer(int value) {
             rotate_arm_dx[1] = 1.0f;
         }
     }
- 
+
     if (flag_rotate) {
         camera_angle += 1.0f;
     }

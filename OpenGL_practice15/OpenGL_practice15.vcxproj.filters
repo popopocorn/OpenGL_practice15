@@ -72,6 +72,12 @@
     <ClCompile Include="practice19.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="practice20.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="practice21.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="opengl_frame.txt">
@@ -130,6 +136,9 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="19_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="20_Vertex_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>
