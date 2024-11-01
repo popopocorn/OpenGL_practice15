@@ -9,8 +9,8 @@
 #include"read_obj.h"
 #include<vector>
 //미리 선언할거
-#define vertex_shader_code "19_Vertex_shader.glsl"
-#define fragment_shader_code "19_Fragment_shader.glsl"
+#define vertex_shader_code "21_Vertex_shader.glsl"
+#define fragment_shader_code "21_Fragment_shader.glsl"
 
 //------------------------------------------------------
 //콜백함수
@@ -26,7 +26,7 @@ GLvoid timer(int);
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO[7], VBO[7], EBO[7], CBO[7];
+GLuint VAO[11], VBO[11], EBO[11];
 
 void make_vertex_shader();
 void make_fragment_shader();
@@ -34,65 +34,14 @@ GLuint make_shader();
 GLvoid init_buffer();
 //------------------------------------------------------
 //전역변수
-GLclampf base_r = 01.0f;
-GLclampf base_g = 01.0f;
-GLclampf base_b = 01.0f;
+GLclampf base_r = 0.0f;
+GLclampf base_g = 0.0f;
+GLclampf base_b = 0.0f;
 GLint width{ 800 }, height{ 600 };
 
 Model body[7];
 
 
-bool flag_move_x{};
-int flag_rotate_y{};
-bool flag_barrel_rotate{};
-bool flag_barrel_merge{};
-bool flag_arm_rotate{};
-bool flag_rotate = false;
-
-float camera_x;
-float camera_y;
-float camera_z;
-
-
-
-float camera_angle{};
-float rotate_angle{};
-
-float center_x;
-float center_y;
-float center_z;
-
-float scale_x[6]{ 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
-float scale_y[6]{ 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
-float scale_z[6]{ 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
-
-float trans_x[6];
-float trans_y[6];
-float trans_z[6];
-
-float transdx = 0.1f;
-
-float rotate_y[6];
-float rotate_x[6];
-
-float temp_a{};
-
-float first_x[6];
-float first_y[6];
-float first_z[6];
-
-float rotate_arm_dx[] = { -1.0f, 1.0f };
-
-const float cube_color[] = {
-    1.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 1.0f,
-    1.0f, 1.0f, 0.0f,
-    0.0f, 1.0f, 1.0f,
-    1.0f, 0.0f, 1.0f,
-    0.0f, 0.0f, 0.0f,
-    1.0f, 1.0f, 1.0f,
-};
 
 //------------------------------------------------------
 //필요한 함수 선언
@@ -157,12 +106,12 @@ GLvoid drawScene(GLvoid) {
     glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
     view = glm::lookAt(camera_pos, camera_target, camera_up);
 
-    view = glm::rotate(view, glm::radians(30.0f + temp_a), glm::vec3(1.0f, 0.0f, 0.0f));
-    view = glm::rotate(view, glm::radians(camera_angle), glm::vec3(0.0f, 1.0f, 0.0f));
-    view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z));
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, 10.0f));
-    view = glm::rotate(view, glm::radians(rotate_angle), glm::vec3(0.0f, 1.0f, 0.0f));
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
+    //view = glm::rotate(view, glm::radians(30.0f + temp_a), glm::vec3(1.0f, 0.0f, 0.0f));
+    //view = glm::rotate(view, glm::radians(camera_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    //view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z));
+    //view = glm::translate(view, glm::vec3(0.0f, 0.0f, 10.0f));
+    //view = glm::rotate(view, glm::radians(rotate_angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    //view = glm::translate(view, glm::vec3(0.0f, 0.0f, -10.0f));
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
 
     GLuint trans_mat = glGetUniformLocation(shader_program, "trans");
@@ -275,14 +224,7 @@ GLvoid init_buffer() {
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
         glEnableVertexAttribArray(0);
-
-        glGenBuffers(1, &CBO[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, CBO[i]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(cube_color), cube_color, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        glEnableVertexAttribArray(1);
-
+ 
         glGenBuffers(1, &EBO[i]);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[i]);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, body[i].face_count * sizeof(Face), body[i].faces, GL_STATIC_DRAW);

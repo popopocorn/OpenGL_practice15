@@ -169,10 +169,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="practice20.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="practice21.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="practice4.cpp">
@@ -238,6 +238,8 @@
     <None Include="19_Fragment_shader.glsl" />
     <None Include="19_Vertex_shader.glsl" />
     <None Include="20_Vertex_shader.glsl" />
+    <None Include="21_Fragment_shader.glsl" />
+    <None Include="21_Vertex_shader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Object Include="cone.obj">
