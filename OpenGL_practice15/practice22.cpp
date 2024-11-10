@@ -65,6 +65,9 @@ bool flag_rotate = false;
 
 auto lastMoustTime = std::chrono::high_resolution_clock::now();
 
+float ball_x[5];
+float ball_y[5];
+
 
 glm::vec3 body_color(0.0f, 0.0f, 1.0f);
 glm::vec3 sky_color(0.0f, 0.5f, 1.0f);
@@ -153,18 +156,23 @@ GLvoid drawScene(GLvoid) {
     temp = glm::rotate(temp, glm::radians(rotate_by_mouse), glm::vec3(0.0f, 0.0f, 1.0f));
     temp = glm::translate(temp, glm::vec3(0.0f, -3.0f, 0.0f));
 
+    glm::mat4 ball_transt[5] = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
+    for (int i = 0; i < 5; ++i) {
+        ball_transt[i] = glm::scale(ball_transt[i], glm::vec3(0.5f, 0.5f, 0.5f));
+    }
 
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
     for (int i = 0; i < 9; ++i) {
-        glBindVertexArray(VAO[i]);
+        
         if (i == 0)
         {
+            glBindVertexArray(VAO[i]);
             for (int j = 0; j < stage.face_count / 2; ++j)
             {
                 //0 왼쪽 1 왼앞 2 오앞 3 오른쪽 4뒤 5위 6아래
 
                 if (j == 0) {
-                    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+                    
                     glUniform3fv(color, 1, glm::value_ptr(purple_color));
                     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
                 }
@@ -193,6 +201,12 @@ GLvoid drawScene(GLvoid) {
                 }
             }
         }
+        if (0 < i && i < 6) {
+            glBindVertexArray(VAO[i]);
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(ball_transt[i-1]));
+            glUniform3fv(color, 1, glm::value_ptr(red_color));
+            glDrawElements(GL_TRIANGLES, ball[i-1].face_count * 3, GL_UNSIGNED_INT, 0);
+        }
     }
 
 
@@ -209,7 +223,17 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
+    case 'z':
+        camera_z += 0.1f;
+        break;
 
+    case 'Z':
+        camera_z -= 0.1f;
+        break;
+
+    case 'y':
+
+        break;
     case 'q':
         glutLeaveMainLoop();
         break;
@@ -311,7 +335,39 @@ GLvoid init_buffer() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[0]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, stage.face_count * sizeof(Face), stage.faces, GL_STATIC_DRAW);
 
+    for (int i = 1; i < 6; ++i) {
+        glGenVertexArrays(1, &VAO[i]);
+        glBindVertexArray(VAO[i]);
 
+        glGenBuffers(1, &VBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, ball[i-1].vertex_count * sizeof(Vertex), ball[i-1].vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glGenBuffers(1, &EBO[i]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[i]);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ball[i-1].face_count * sizeof(Face), ball[i-1].faces, GL_STATIC_DRAW);
+
+    }
+
+    for (int i = 6; i < 9; ++i) {
+        glGenVertexArrays(1, &VAO[i]);
+        glBindVertexArray(VAO[i]);
+
+        glGenBuffers(1, &VBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, box[i - 6].vertex_count * sizeof(Vertex), box[i - 6].vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glGenBuffers(1, &EBO[i]);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[i]);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, box[i - 6].face_count * sizeof(Face), box[i - 6].faces, GL_STATIC_DRAW);
+
+    }
 }
 GLvoid SpecialKeyboard(int key, int x, int y) {
 
@@ -320,10 +376,10 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
 GLvoid timer(int value) {
 
 
-    if (dir < 0) {
+    if (dir < 0 && rotate_by_mouse < 60) {
         rotate_by_mouse += 0.5f;
     }
-    else if (dir > 0) {
+    else if (dir > 0 && rotate_by_mouse >-60) {
         rotate_by_mouse -= 0.5f;
     }
     /*auto currentTime = std::chrono::high_resolution_clock::now();
