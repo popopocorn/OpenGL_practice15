@@ -14,6 +14,7 @@
 #define vertex_shader_code "21_Vertex_shader.glsl"
 #define fragment_shader_code "21_Fragment_shader.glsl"
 
+
 //------------------------------------------------------
 //콜백함수
 
@@ -67,6 +68,9 @@ auto lastMoustTime = std::chrono::high_resolution_clock::now();
 
 float ball_x[5];
 float ball_y[5];
+float ball_dx[5]{0.1f, -0.1f, 0.1f, -0.1f, 0.1f, };
+float ball_dy[5]{ -0.1f, 0.1f, -0.1f, 0.1f, -0.1f, };
+float ball_count{};
 
 float cube_scale[3]{1.1f, 0.7f, 0.5f};
 float cube_first_y[3]{-2.75, -2.78, -2.85};
@@ -86,6 +90,12 @@ glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
 //필요한 함수 선언
 std::random_device(rd);
 std::mt19937 g(rd());
+void gen_ball() {
+    for (int i = 0; i < 5; ++i) {
+        ball_x[i] = float(g() % 500) / 1000;
+        ball_y[i] = (float(g() % 500) / 1000) + 1.5f;
+    }
+}
 
 //------------------------------------------------------
 void main(int argc, char** argv) {
@@ -117,7 +127,7 @@ void main(int argc, char** argv) {
     read_obj_file("stage.obj", &stage);
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
     init_buffer();
-
+    gen_ball();
     glutMainLoop();
 
 }
@@ -163,6 +173,7 @@ GLvoid drawScene(GLvoid) {
     glm::mat4 ball_transt[5] = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
     for (int i = 0; i < 5; ++i) {
         ball_transt[i] = glm::rotate(ball_transt[i], glm::radians(rotate_by_mouse), glm::vec3(0.0f, 0.0f, 1.0f));
+        ball_transt[i] = glm::translate(ball_transt[i], glm::vec3(ball_x[i], ball_y[i], 0.0f));
         ball_transt[i] = glm::scale(ball_transt[i], glm::vec3(0.5f, 0.5f, 0.5f));
     }
     glm::mat4 cube_trans[3] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
@@ -212,7 +223,7 @@ GLvoid drawScene(GLvoid) {
                 }
             }
         }
-        if (0 < i && i < 6) {
+        if (0 < i && i < ball_count + 1) {
             glBindVertexArray(VAO[i]);
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(ball_transt[i-1]));
             glUniform3fv(color, 1, glm::value_ptr(red_color[0]));
@@ -256,11 +267,18 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         camera_angle -= 1.0f;
         break;
 
+    case 'b':
+
+        if (ball_count < 5) {
+            ++ball_count;
+        }
+        break;
+
     case 'q':
         glutLeaveMainLoop();
         break;
 
-        break;
+        
     }
 
 
@@ -437,6 +455,24 @@ GLvoid timer(int value) {
             cube_x[1] += 0.05f;
         if (cube_x[2] < 2.85)
             cube_x[2] += 0.05f;
+    }
+
+
+    for (int i = 0; i < ball_count + 1; ++i) {
+        ball_x[i] += ball_dx[i];
+        ball_y[i] += ball_dy[i];
+        if (ball_x[i] > 2.75) {
+            ball_dx[i] = -0.1f;
+        }
+        if (ball_y[i] > 2.75) {
+            ball_dy[i] = -0.1f;
+        }
+        if (ball_x[i] < -2.75) {
+            ball_dx[i] = 0.1f;
+        }
+        if (ball_y[i] < -2.75) {
+            ball_dy[i] = 0.1f;
+        }
     }
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);

@@ -2,9 +2,13 @@
 #include<gl/glew.h>
 #include<gl/freeglut.h>
 #include<gl/freeglut_ext.h>
+#include<gl/glm/ext.hpp>
+#include<gl/glm/glm.hpp>
+#include<gl/glm/gtc/matrix_transform.hpp>
 #include"file_open.h"
-#include<random>
+#include"read_obj.h"
 #include<vector>
+#include<random>
 //미리 선언할거
 #define vertex_shader_code "07_vertex_shader.glsl"
 #define fragment_shader_code "07_fragment_shader.glsl"
@@ -16,6 +20,8 @@ std::mt19937 g(rd());
 GLvoid drawScene(GLvoid);
 GLvoid Reshape(int w, int h);
 GLvoid Keyboard(unsigned char key, int x, int y);
+GLvoid Mouse(int, int, int, int);
+GLvoid MoveMouse(int, int);
 //------------------------------------------------------
 //셰이더 용 선언
 GLuint shader_program;
@@ -32,14 +38,20 @@ GLvoid init_buffer();
 GLclampf base_r = 1.0f;
 GLclampf base_g = 1.0f;
 GLclampf base_b = 1.0f;
-GLint width{ 800 }, height{ 600 };
+GLint width{ 800 }, height{ 1200 };
 
 typedef struct shapes {
-    std::vector<GLclampf> vertices;
-    GLclampf r, g, b;
+    std::vector<float> vertices;
+    glm::vec3 body_color = glm::vec3(0.0f, 0.0f, 1.0f);
     char shape_{};
 };
 
+bool flag_drag;
+
+float mouse_first_x;
+float mouse_first_y;
+float mouse_end_x;
+float mouse_end_y;
 
 //------------------------------------------------------
 //필요한 함수 선언
@@ -82,7 +94,7 @@ GLvoid drawScene(GLvoid) {
     glValidateProgram(shader_program);
 
 
-
+    
 
 
     glutSwapBuffers();
@@ -192,4 +204,18 @@ GLvoid init_buffer() {
 
 
 
+}
+
+GLvoid Mouse(int button, int state, int x, int y) {
+    if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN) {
+        mouse_first_x = (float)(x - (float)800 / 2.0) * (float)(1.0 / (float)(800 / 2.0));
+        mouse_first_y = -(float)(y - (float)600 / 2.0) * (float)(1.0 / (float)(600 / 2.0));
+        flag_drag = true;
+    }
+}
+GLvoid MoveMouse(int x, int y) {
+    if (flag_drag) {
+        mouse_end_x = (float)(x - (float)800 / 2.0) * (float)(1.0 / (float)(800 / 2.0));
+        mouse_end_y = -(float)(y - (float)600 / 2.0) * (float)(1.0 / (float)(600 / 2.0));
+    }
 }
