@@ -68,6 +68,10 @@ auto lastMoustTime = std::chrono::high_resolution_clock::now();
 float ball_x[5];
 float ball_y[5];
 
+float cube_scale[3]{1.1f, 0.7f, 0.5f};
+float cube_first_y[3]{-2.75, -2.78, -2.85};
+float cube_first_z[3]{0.0, 0.6, 1.0};
+float cube_x[3];
 
 glm::vec3 body_color(0.0f, 0.0f, 1.0f);
 glm::vec3 sky_color(0.0f, 0.5f, 1.0f);
@@ -75,7 +79,7 @@ glm::vec3 purple_color(1.0f, 0.0f, 1.0f);
 glm::vec3 brown_color(0.5f, 0.3f, 0.0f);
 glm::vec3 gray_color(0.5f, 0.5f, 0.5f);
 glm::vec3 white_color(1.0f, 1.0f, 1.0f);
-glm::vec3 red_color(1.0f, 0.0f, 0.0f);
+glm::vec3 red_color[3] = { glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.7f, 0.0f, 0.0f), glm::vec3(0.5f, 0.0f, 0.0f) };
 glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
 
 //------------------------------------------------------
@@ -158,7 +162,14 @@ GLvoid drawScene(GLvoid) {
 
     glm::mat4 ball_transt[5] = {glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f)};
     for (int i = 0; i < 5; ++i) {
+        ball_transt[i] = glm::rotate(ball_transt[i], glm::radians(rotate_by_mouse), glm::vec3(0.0f, 0.0f, 1.0f));
         ball_transt[i] = glm::scale(ball_transt[i], glm::vec3(0.5f, 0.5f, 0.5f));
+    }
+    glm::mat4 cube_trans[3] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
+    for (int i = 0; i < 3; ++i) {
+        cube_trans[i] = glm::rotate(cube_trans[i], glm::radians(rotate_by_mouse), glm::vec3(0.0f, 0.0f, 1.0f));
+        cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(cube_x[i], cube_first_y[i], cube_first_z[i]));
+        cube_trans[i] = glm::scale(cube_trans[i], glm::vec3(cube_scale[i], cube_scale[i], cube_scale[i]));
     }
 
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
@@ -204,8 +215,14 @@ GLvoid drawScene(GLvoid) {
         if (0 < i && i < 6) {
             glBindVertexArray(VAO[i]);
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(ball_transt[i-1]));
-            glUniform3fv(color, 1, glm::value_ptr(red_color));
+            glUniform3fv(color, 1, glm::value_ptr(red_color[0]));
             glDrawElements(GL_TRIANGLES, ball[i-1].face_count * 3, GL_UNSIGNED_INT, 0);
+        }
+        if(5 < i && i < 9) {
+            glBindVertexArray(VAO[i]);
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(cube_trans[i - 6]));
+            glUniform3fv(color, 1, glm::value_ptr(red_color[i-6]));
+            glDrawElements(GL_TRIANGLES, box[i - 6].face_count * 3, GL_UNSIGNED_INT, 0);
         }
     }
 
@@ -232,8 +249,13 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         break;
 
     case 'y':
-
+        camera_angle += 1.0f;
         break;
+
+    case 'Y':
+        camera_angle -= 1.0f;
+        break;
+
     case 'q':
         glutLeaveMainLoop();
         break;
@@ -397,6 +419,25 @@ GLvoid timer(int value) {
             rotate_by_mouse -= 1.0f;
         }
     }*/
+
+
+    if (rotate_by_mouse > 0) {
+        if (cube_x[0] > -2.75)
+            cube_x[0] -= 0.05f;
+        if (cube_x[1] > -2.78)
+            cube_x[1] -= 0.05f;
+        if (cube_x[2] > -2.85)
+            cube_x[2] -= 0.05f;
+
+    }
+    else if (rotate_by_mouse < 0){
+        if (cube_x[0] < 2.75)
+            cube_x[0] += 0.05f;
+        if (cube_x[1] < 2.78)
+            cube_x[1] += 0.05f;
+        if (cube_x[2] < 2.85)
+            cube_x[2] += 0.05f;
+    }
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);
 }
