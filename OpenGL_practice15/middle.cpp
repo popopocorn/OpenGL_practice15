@@ -9,6 +9,7 @@
 #include"read_obj.h"
 #include<vector>
 #include<random>
+#include<chrono>
 //미리 선언할거
 #define vertex_shader_code "middle_vertex_shader.glsl"
 #define fragment_shader_code "middle_fragment_shader.glsl"
@@ -49,6 +50,8 @@ typedef struct shapes {
     int num_of_point{};
     int num_of_face{};
     std::vector<unsigned int>index_list;
+    glm::mat4 mod_trans = glm::mat4(1.0f);
+
 
 
     void init() {
@@ -112,7 +115,7 @@ typedef struct shapes {
 
         glGenBuffers(1, &VBO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size(), vertices.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 10, vertices.data(), GL_DYNAMIC_DRAW);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
