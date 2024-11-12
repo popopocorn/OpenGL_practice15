@@ -153,6 +153,12 @@
     <None Include="21_Fragment_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="middle_Vertex_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="middle_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Object Include="cube.obj">
