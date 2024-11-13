@@ -243,8 +243,8 @@ GLvoid drawScene(GLvoid) {
             glUniform3fv(color, 1, glm::value_ptr(s[i].body_color));
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
             glBindVertexArray(s[i].VAO);
-            glDrawElements(GL_LINE_STRIP, s[i].num_of_face * 3 + 1, GL_UNSIGNED_INT, 0);
-            //glDrawArrays(GL_LINE_STRIP, 0, s[i].vertices.size() * 3);
+            //glDrawElements(GL_LINE_STRIP, s[i].num_of_face * 3 + 1, GL_UNSIGNED_INT, 0);
+            glDrawArrays(GL_POINTS, 0, s[i].vertices.size() * 3);
 
         }
     }
@@ -467,7 +467,7 @@ void is_hit(int index) {
             ++s[index].num_of_face;
             std::cout << s[index].vertices[s[index].vertices.size() - 1].x << ", " << s[index].vertices[s[index].vertices.size() - 1].y << std::endl;
         }
-        spilt_shape(index);
+        //spilt_shape(index);
         s[index].update_buffer();
 
     }
@@ -561,8 +561,7 @@ void spilt_shape(int index) {
     top.update_buffer();
     bottom.update_buffer();
 
-    // 기존 도형 삭제 후 새로운 도형들 추가
-    s.erase(s.begin() + index);  // 인덱스를 정확하게 관리
+    //s.erase(s.begin() + index);
     s.push_back(top);
     s.push_back(bottom);
     std::cout << "새로운 도형 추가 후 크기: " << s.size() << std::endl;
