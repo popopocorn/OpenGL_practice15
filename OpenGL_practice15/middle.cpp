@@ -51,12 +51,20 @@ typedef struct shapes {
     glm::vec3 body_color = glm::vec3(0.0f, 0.0f, 0.0f);
     int num_of_point{};
     int num_of_face{};
+    float dx{};
+    float dy{};
+    float first_x{};
+    float first_y{};
+    float angle{};
     std::vector<unsigned int>index_list;
     glm::mat4 mod_trans = glm::mat4(1.0f);
 
-
-
     void init() {
+
+        mod_trans = glm::translate(mod_trans, glm::vec3(first_x + dx, first_y + dy, 0.0f));
+        mod_trans = glm::rotate(mod_trans, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
 
         body_color = glm::vec3(float(g() %  1000) / 1000.0f, float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f);
         num_of_point = g() % 4 + 3;  
@@ -129,6 +137,13 @@ typedef struct shapes {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
     }
 
+    void update_buffer() {
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 10, vertices.data(), GL_DYNAMIC_DRAW);
+       
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
+    }
 };
 
 bool flag_drag;
@@ -148,6 +163,10 @@ glm::vec3 red_color(1.0f, 0.0f, 0.0f);
 
 void is_hit(int);
 
+int ccw(glm::vec3, glm::vec3, glm::vec3);
+bool get_intersection_point(const glm::vec3& p1, const glm::vec3& p2,
+    const glm::vec3& q1, const glm::vec3& q2,
+    glm::vec3& intersection);
 
 shapes s[number_of_shape];
 //------------------------------------------------------
@@ -212,6 +231,7 @@ GLvoid drawScene(GLvoid) {
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
             glBindVertexArray(s[i].VAO);
             glDrawElements(GL_LINE_STRIP, s[i].num_of_face * 3 + 1, GL_UNSIGNED_INT, 0);
+
         }
     }
 
@@ -382,8 +402,80 @@ GLvoid timer(int value) {
     glutPostRedisplay();
 }
 
+int ccw(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3) {
+    float s = p1.x * p2.y + p2.x * p3.y + p3.x * p1.y;
+    s -= (p1.y * p2.x + p2.y * p3.x + p3.y * p1.x);
+
+    if (s > 0)return 1;
+    else if (s == 0) return 0;
+    else return -1;
+}
+
 void is_hit(int index) {
-    s[index].vertices;
+    shapes& current_shape = s[index];
+    glm::vec3 p1(mouse_first_x, mouse_first_y, 0.0f);
+    glm::vec3 p2(mouse_end_x, mouse_end_y, 0.0f);
+    glm::vec3 intersection;
+    std::vector<glm::vec3> intersections;
 
+    for (int i = 0; i < current_shape.index_list.size(); ++i) {
+        glm::vec3 q1 = current_shape.vertices[current_shape.index_list[i]];
+        glm::vec3 q2 = current_shape.vertices[current_shape.index_list[(i + 1) % current_shape.index_list.size()]];
 
+        int ccw1 = ccw(p1, p2, q1) * ccw(p1, p2, q2);
+        int ccw2 = ccw(q1, q2, p1) * ccw(q1, q2, p2);
+
+        if (ccw1 <= 0 && ccw2 <= 0) {
+            if (get_intersection_point(p1, p2, q1, q2, intersection)) {
+                // 중복된 교차점 여부 확인
+                bool is_duplicate = false;
+                for (const auto& existing_intersection : intersections) {
+                    if (glm::length(existing_intersection - intersection) < 0.001f) {
+                        is_duplicate = true;
+                        break;
+                    }
+                }
+
+                if (!is_duplicate) {
+                    intersections.push_back(intersection);
+                    std::cout << "도형 " << index << "이/가 선에 의해 맞았습니다! 교차점: ("
+                        << intersection.x << ", " << intersection.y << ")" << std::endl;
+                }
+            }
+        }
+    }
+
+    for (const auto& inter : intersections) {
+        s[index].vertices.push_back(inter);  // vertices에 교차점 추가
+        ++s[index].num_of_point;
+        std::cout << s[index].vertices[s[index].vertices.size() - 1].x << ", " << s[index].vertices[s[index].vertices.size() - 1].y << std::endl;
+    }
+    s[index].update_buffer();
+    
+}
+
+bool get_intersection_point(const glm::vec3& p1, const glm::vec3& p2,
+    const glm::vec3& q1, const glm::vec3& q2,
+    glm::vec3& intersection) {
+    glm::vec3 r = p2 - p1;
+    glm::vec3 s = q2 - q1;
+
+    float rxs = r.x * s.y - r.y * s.x;
+    float qpxr = (q1.x - p1.x) * r.y - (q1.y - p1.y) * r.x;
+
+    // rxs가 0이면 선분이 평행하거나 일치
+    if (rxs == 0 && qpxr == 0) {
+        return false; // 평행하거나 일치하는 경우 교차점이 없음
+    }
+
+    float t = ((q1.x - p1.x) * s.y - (q1.y - p1.y) * s.x) / rxs;
+    float u = qpxr / rxs;
+
+    // 0 <= t <= 1 및 0 <= u <= 1이면 두 선분이 교차
+    if (rxs != 0 && t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+        intersection = p1 + t * r;
+        return true;
+    }
+
+    return false; // 교차하지 않는 경우
 }
