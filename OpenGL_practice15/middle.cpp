@@ -10,10 +10,12 @@
 #include<vector>
 #include<random>
 #include<chrono>
+
+
 //미리 선언할거
 #define vertex_shader_code "middle_vertex_shader.glsl"
 #define fragment_shader_code "middle_fragment_shader.glsl"
-#define number_of_shape 1
+
 
 std::random_device rd;
 std::mt19937 g(rd());
@@ -56,95 +58,101 @@ typedef struct shapes {
     float first_x{};
     float first_y{};
     float angle{};
+    bool split = false;
     std::vector<unsigned int>index_list;
     glm::mat4 mod_trans = glm::mat4(1.0f);
+    shapes* other;
 
-    void init() {
+    void init();
 
-        mod_trans = glm::translate(mod_trans, glm::vec3(first_x + dx, first_y + dy, 0.0f));
-        mod_trans = glm::rotate(mod_trans, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
-
-
-
-        body_color = glm::vec3(float(g() %  1000) / 1000.0f, float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f);
-        num_of_point = g() % 4 + 3;  
-
-        switch (num_of_point) {
-        case 3: // 삼각형
-            vertices = {
-                glm::vec3(0.0f,  0.15f, 0.0f),  // 위
-               glm::vec3(-0.15f, -0.15f, 0.0f),  // 왼쪽
-                glm::vec3(0.15f, -0.15f, 0.0f)   // 오른쪽
-            };
-            index_list = { 0, 1, 2 };  // 삼각형의 인덱스
-            num_of_face = 1;
-            break;
-
-        case 4: // 사각형
-            vertices = {
-                glm::vec3(-0.15f,  0.15f, 0.0f),  // 왼쪽 위
-                 glm::vec3(0.15f,  0.15f, 0.0f),   // 오른쪽 위
-                 glm::vec3(0.15f, -0.15f, 0.0f),   // 오른쪽 아래
-                glm::vec3(-0.15f, -0.15f, 0.0f)   // 왼쪽 아래
-            };
-            index_list = { 0, 1, 2, 0, 2, 3 };  
-            num_of_face = 2;
-            break;
-
-        case 5: // 오각형
-            vertices = {
-                glm::vec3(0.0f,  0.15f, 0.0f),   // 상단
-                glm::vec3(0.15f,  0.05f, 0.0f),  // 오른쪽 위
-                glm::vec3(0.09f, -0.2f, 0.0f),   // 오른쪽 아래
-               glm::vec3(-0.09f, -0.2f, 0.0f),   // 왼쪽 아래
-               glm::vec3(-0.15f,  0.05f, 0.0f)   // 왼쪽 위
-            };
-            index_list = { 0, 1, 2, 0, 2, 3, 0, 3, 4 };  
-            num_of_face = 3;
-            break;
-
-        case 6: // 육각형
-            vertices = {
-                glm::vec3(0.0f,  0.15f, 0.0f),   // 상단
-                glm::vec3(0.15f,  0.075f, 0.0f), // 오른쪽 위
-                glm::vec3(0.15f, -0.075f, 0.0f), // 오른쪽 아래
-                glm::vec3(0.0f, -0.15f, 0.0f),   // 하단
-               glm::vec3(-0.15f, -0.075f, 0.0f), // 왼쪽 아래
-               glm::vec3(-0.15f,  0.075f, 0.0f)  // 왼쪽 위
-            };
-            index_list = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 };  
-            num_of_face = 4;
-            break;
-
-        default:
-
-            break;
-        }
-
-        // 버퍼 생성
-        glGenVertexArrays(1, &VAO);
-        glBindVertexArray(VAO);
-
-        glGenBuffers(1, &VBO);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 10, vertices.data(), GL_DYNAMIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glGenBuffers(1, &EBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
-    }
-
-    void update_buffer() {
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 10, vertices.data(), GL_DYNAMIC_DRAW);
-       
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
-    }
+    void update_buffer();
 };
+void shapes::init() {
+
+    mod_trans = glm::translate(mod_trans, glm::vec3(first_x + dx, first_y + dy, 0.0f));
+    mod_trans = glm::rotate(mod_trans, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
+
+    body_color = glm::vec3(float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f);
+    num_of_point = g() % 4 + 3;
+
+    switch (num_of_point) {
+    case 3: // 삼각형
+        vertices = {
+            glm::vec3(0.0f,  0.15f, 0.0f),  // 위
+           glm::vec3(-0.15f, -0.15f, 0.0f),  // 왼쪽
+            glm::vec3(0.15f, -0.15f, 0.0f)   // 오른쪽
+        };
+        index_list = { 0, 1, 2 };  // 삼각형의 인덱스
+        num_of_face = 1;
+        break;
+
+    case 4: // 사각형
+        vertices = {
+            glm::vec3(-0.15f,  0.15f, 0.0f),  // 왼쪽 위
+             glm::vec3(0.15f,  0.15f, 0.0f),   // 오른쪽 위
+             glm::vec3(0.15f, -0.15f, 0.0f),   // 오른쪽 아래
+            glm::vec3(-0.15f, -0.15f, 0.0f)   // 왼쪽 아래
+        };
+        index_list = { 0, 1, 2, 0, 2, 3 };
+        num_of_face = 2;
+        break;
+
+    case 5: // 오각형
+        vertices = {
+            glm::vec3(0.0f,  0.15f, 0.0f),   // 상단
+            glm::vec3(0.15f,  0.05f, 0.0f),  // 오른쪽 위
+            glm::vec3(0.09f, -0.2f, 0.0f),   // 오른쪽 아래
+           glm::vec3(-0.09f, -0.2f, 0.0f),   // 왼쪽 아래
+           glm::vec3(-0.15f,  0.05f, 0.0f)   // 왼쪽 위
+        };
+        index_list = { 0, 1, 2, 0, 2, 3, 0, 3, 4 };
+        num_of_face = 3;
+        break;
+
+    case 6: // 육각형
+        vertices = {
+            glm::vec3(0.0f,  0.15f, 0.0f),   // 상단
+            glm::vec3(0.15f,  0.075f, 0.0f), // 오른쪽 위
+            glm::vec3(0.15f, -0.075f, 0.0f), // 오른쪽 아래
+            glm::vec3(0.0f, -0.15f, 0.0f),   // 하단
+           glm::vec3(-0.15f, -0.075f, 0.0f), // 왼쪽 아래
+           glm::vec3(-0.15f,  0.075f, 0.0f)  // 왼쪽 위
+        };
+        index_list = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 };
+        num_of_face = 4;
+        break;
+
+    default:
+
+        break;
+    }
+
+    // 버퍼 생성
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 3, vertices.data(), GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
+}
+void shapes::update_buffer() {
+    num_of_point = vertices.size();
+    num_of_face = num_of_point - 2;
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 3, vertices.data(), GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
+}
 
 bool flag_drag;
 bool flag_wired;
@@ -153,6 +161,8 @@ float mouse_first_x;
 float mouse_first_y;
 float mouse_end_x;
 float mouse_end_y;
+
+bool flag_split;
 
 float mouse_line[6] = { };
 
@@ -168,7 +178,9 @@ bool get_intersection_point(const glm::vec3& p1, const glm::vec3& p2,
     const glm::vec3& q1, const glm::vec3& q2,
     glm::vec3& intersection);
 
-shapes s[number_of_shape];
+void spilt_shape(int);
+
+std::vector<shapes> s;
 //------------------------------------------------------
 void main(int argc, char** argv) {
     glutInit(&argc, argv);
@@ -190,12 +202,13 @@ void main(int argc, char** argv) {
     glutMouseFunc(Mouse);
     glutMotionFunc(MoveMouse);
     glutTimerFunc(60, timer, 0);
+    shapes first;
+    first.init();
+    s.push_back(first);
+    
 
     init_buffer();
 
-    for (int i = 0; i < number_of_shape; ++i) {
-        s[i].init();
-    }
 
     glutMainLoop();
 
@@ -218,7 +231,7 @@ GLvoid drawScene(GLvoid) {
     glm::mat4 temp(1.0f);
 
     if(not flag_wired){
-        for (int i = 0; i < number_of_shape; ++i) {
+        for (int i = 0; i < s.size(); ++i) {
             glUniform3fv(color, 1, glm::value_ptr(s[i].body_color));
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
             glBindVertexArray(s[i].VAO);
@@ -226,11 +239,12 @@ GLvoid drawScene(GLvoid) {
         }
     }
     else {
-        for (int i = 0; i < number_of_shape; ++i) {
+        for (int i = 0; i < s.size(); ++i) {
             glUniform3fv(color, 1, glm::value_ptr(s[i].body_color));
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
             glBindVertexArray(s[i].VAO);
             glDrawElements(GL_LINE_STRIP, s[i].num_of_face * 3 + 1, GL_UNSIGNED_INT, 0);
+            //glDrawArrays(GL_LINE_STRIP, 0, s[i].vertices.size() * 3);
 
         }
     }
@@ -361,7 +375,7 @@ GLvoid Mouse(int button, int state, int x, int y) {
         mouse_first_x = (float)(x - (float)width / 2.0) * (float)(1.0 / (float)(width / 2.0));
         mouse_first_y = -(float)(y - (float)height / 2.0) * (float)(1.0 / (float)(height / 2.0));
         flag_drag = true;
-
+        flag_split = true;
 
         mouse_line[0] = mouse_first_x;
         mouse_line[1] = mouse_first_y;
@@ -372,8 +386,9 @@ GLvoid Mouse(int button, int state, int x, int y) {
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mouse_line), mouse_line);
     }
     else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
-        for (int i = 0; i < number_of_shape; ++i) {
-            is_hit(i);
+        for (int i = 0; i < s.size(); ++i) {
+            if(flag_split)
+                is_hit(i);
         }
         flag_drag = false;
     }
@@ -417,6 +432,7 @@ void is_hit(int index) {
     glm::vec3 p2(mouse_end_x, mouse_end_y, 0.0f);
     glm::vec3 intersection;
     std::vector<glm::vec3> intersections;
+    bool is_duplicate = false;
 
     for (int i = 0; i < current_shape.index_list.size(); ++i) {
         glm::vec3 q1 = current_shape.vertices[current_shape.index_list[i]];
@@ -428,7 +444,7 @@ void is_hit(int index) {
         if (ccw1 <= 0 && ccw2 <= 0) {
             if (get_intersection_point(p1, p2, q1, q2, intersection)) {
                 // 중복된 교차점 여부 확인
-                bool is_duplicate = false;
+                is_duplicate = false;
                 for (const auto& existing_intersection : intersections) {
                     if (glm::length(existing_intersection - intersection) < 0.001f) {
                         is_duplicate = true;
@@ -436,7 +452,7 @@ void is_hit(int index) {
                     }
                 }
 
-                if (!is_duplicate) {
+                if (not is_duplicate) {
                     intersections.push_back(intersection);
                     std::cout << "도형 " << index << "이/가 선에 의해 맞았습니다! 교차점: ("
                         << intersection.x << ", " << intersection.y << ")" << std::endl;
@@ -444,14 +460,17 @@ void is_hit(int index) {
             }
         }
     }
+    if(not is_duplicate){
+        for (const auto& inter : intersections) {
+            s[index].vertices.push_back(inter);  // vertices에 교차점 추가
+            ++s[index].num_of_point;
+            ++s[index].num_of_face;
+            std::cout << s[index].vertices[s[index].vertices.size() - 1].x << ", " << s[index].vertices[s[index].vertices.size() - 1].y << std::endl;
+        }
+        spilt_shape(index);
+        s[index].update_buffer();
 
-    for (const auto& inter : intersections) {
-        s[index].vertices.push_back(inter);  // vertices에 교차점 추가
-        ++s[index].num_of_point;
-        std::cout << s[index].vertices[s[index].vertices.size() - 1].x << ", " << s[index].vertices[s[index].vertices.size() - 1].y << std::endl;
     }
-    s[index].update_buffer();
-    
 }
 
 bool get_intersection_point(const glm::vec3& p1, const glm::vec3& p2,
@@ -478,4 +497,74 @@ bool get_intersection_point(const glm::vec3& p1, const glm::vec3& p2,
     }
 
     return false; // 교차하지 않는 경우
+}
+
+float is_under(int x) {
+    float m = (mouse_end_y - mouse_first_y) / (mouse_end_x - mouse_first_x);
+    float y = m * x + (mouse_first_y - (m * mouse_first_x));
+    return y;
+}
+void spilt_shape(int index) {
+    std::vector<glm::vec3> temp1;
+    std::vector<glm::vec3> temp2;
+    std::vector<unsigned int> temp_list1;
+    std::vector<unsigned int> temp_list2;
+
+    shapes top;
+    shapes bottom;
+    top.init();
+    bottom.init();
+
+    if ((mouse_first_x - mouse_end_x) == 0) {
+        for (int i = 0; i < s[index].index_list.size(); ++i) {
+            if (s[index].vertices[s[index].index_list[i]].x <= mouse_end_x) {
+                temp1.push_back(s[index].vertices[s[index].index_list[i]]);
+            }
+            if (s[index].vertices[s[index].index_list[i]].x >= mouse_end_x) {
+                temp2.push_back(s[index].vertices[s[index].index_list[i]]);
+            }
+        }
+    }
+    else {
+        for (int i = 0; i < s[index].index_list.size(); ++i) {
+            if (s[index].vertices[s[index].index_list[i]].y <= is_under(s[index].vertices[s[index].index_list[i]].x)) {
+                temp1.push_back(s[index].vertices[s[index].index_list[i]]);
+            }
+            if (s[index].vertices[s[index].index_list[i]].y >= is_under(s[index].vertices[s[index].index_list[i]].x)) {
+                temp2.push_back(s[index].vertices[s[index].index_list[i]]);
+            }
+        }
+    }
+
+    top.vertices = temp1;
+    bottom.vertices = temp2;
+
+    // 삼각형 인덱스 할당
+    if (top.vertices.size() >= 3) {
+        for (int i = 0; i < top.vertices.size() - 2; ++i) {
+            temp_list1.push_back(0);
+            temp_list1.push_back(i + 1);
+            temp_list1.push_back(i + 2);
+        }
+        top.index_list = temp_list1;
+    }
+
+    if (bottom.vertices.size() >= 3) {
+        for (int i = 0; i < bottom.vertices.size() - 2; ++i) {
+            temp_list2.push_back(0);
+            temp_list2.push_back(i + 1);
+            temp_list2.push_back(i + 2);
+        }
+        bottom.index_list = temp_list2;
+    }
+
+    top.update_buffer();
+    bottom.update_buffer();
+
+    // 기존 도형 삭제 후 새로운 도형들 추가
+    s.erase(s.begin() + index);  // 인덱스를 정확하게 관리
+    s.push_back(top);
+    s.push_back(bottom);
+    std::cout << "새로운 도형 추가 후 크기: " << s.size() << std::endl;
+    flag_split = false;
 }
