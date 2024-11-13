@@ -724,12 +724,12 @@ GLvoid timer(int value) {
             rotate_robot -= 180;
         }
         if (robot_y > 0.11) {
-            if ((obs_x[0] - 0.3 < robot_x && robot_x < obs_x[0] + 0.3 &&
-                obs_z[0] - 0.3 < robot_z && robot_z < obs_z[0] + 0.3) ||
-                (obs_x[1] - 0.3 < robot_x && robot_x < obs_x[1] + 0.3 &&
-                    obs_z[1] - 0.3 < robot_z && robot_z < obs_z[1] + 0.3) ||
-                (obs_x[2] - 0.3 < robot_x && robot_x < obs_x[2] + 0.3 &&
-                    obs_z[2] - 0.3 < robot_z && robot_z < obs_z[2] + 0.3)
+            if ((obs_x[0] - 0.4 < robot_x && robot_x < obs_x[0] + 0.4 &&
+                obs_z[0] - 0.4 < robot_z && robot_z < obs_z[0] + 0.4) ||
+                (obs_x[1] - 0.4 < robot_x && robot_x < obs_x[1] + 0.4 &&
+                    obs_z[1] - 0.4 < robot_z && robot_z < obs_z[1] + 0.4) ||
+                (obs_x[2] - 0.4 < robot_x && robot_x < obs_x[2] + 0.4 &&
+                    obs_z[2] - 0.4 < robot_z && robot_z < obs_z[2] + 0.4)
                 ) {
                 plane = 1.01;
             }
@@ -745,12 +745,12 @@ GLvoid timer(int value) {
     }
     robot_y += robot_dy;
     if (flag_jump) {
-        if ((obs_x[0] - 0.3 < robot_x && robot_x < obs_x[0] + 0.3 &&
-            obs_z[0] - 0.3 < robot_z && robot_z < obs_z[0] + 0.3) ||
-            (obs_x[1] - 0.3 < robot_x && robot_x < obs_x[1] + 0.3 &&
-                obs_z[1] - 0.3 < robot_z && robot_z < obs_z[1] + 0.3) ||
-            (obs_x[2] - 0.3 < robot_x && robot_x < obs_x[2] + 0.3 &&
-                obs_z[2] - 0.3 < robot_z && robot_z < obs_z[2] + 0.3)
+        if ((obs_x[0] - 0.4 < robot_x && robot_x < obs_x[0] + 0.4 &&
+            obs_z[0] - 0.4 < robot_z && robot_z < obs_z[0] + 0.4) ||
+            (obs_x[1] - 0.4 < robot_x && robot_x < obs_x[1] + 0.4 &&
+                obs_z[1] - 0.4 < robot_z && robot_z < obs_z[1] + 0.4) ||
+            (obs_x[2] - 0.4 < robot_x && robot_x < obs_x[2] + 0.4 &&
+                obs_z[2] - 0.4 < robot_z && robot_z < obs_z[2] + 0.4)
             ) {
             plane = 1.01;
         }

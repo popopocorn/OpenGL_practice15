@@ -64,6 +64,15 @@ int dir = 0;
 
 bool flag_rotate = false;
 
+bool flag_open;
+
+bool flag_x_down;
+bool flag_y_down;
+bool flag_x_up;
+bool flag_y_up;
+
+float open_angle;
+
 auto lastMoustTime = std::chrono::high_resolution_clock::now();
 
 float ball_x[5];
@@ -76,6 +85,7 @@ float cube_scale[3]{1.1f, 0.7f, 0.5f};
 float cube_first_y[3]{-2.75, -2.78, -2.85};
 float cube_first_z[3]{0.0, 0.6, 1.0};
 float cube_x[3];
+float cube_y[3];
 
 glm::vec3 body_color(0.0f, 0.0f, 1.0f);
 glm::vec3 sky_color(0.0f, 0.5f, 1.0f);
@@ -179,9 +189,15 @@ GLvoid drawScene(GLvoid) {
     glm::mat4 cube_trans[3] = { glm::mat4(1.0f), glm::mat4(1.0f), glm::mat4(1.0f) };
     for (int i = 0; i < 3; ++i) {
         cube_trans[i] = glm::rotate(cube_trans[i], glm::radians(rotate_by_mouse), glm::vec3(0.0f, 0.0f, 1.0f));
+        cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(0.0f, cube_y[i], 0.0f));
         cube_trans[i] = glm::translate(cube_trans[i], glm::vec3(cube_x[i], cube_first_y[i], cube_first_z[i]));
         cube_trans[i] = glm::scale(cube_trans[i], glm::vec3(cube_scale[i], cube_scale[i], cube_scale[i]));
     }
+    glm::mat4 open(1.0f);
+    open = glm::rotate(open, glm::radians(rotate_by_mouse), glm::vec3(0.0f, 0.0f, 1.0f));
+    open = glm::translate(open, glm::vec3(-3.0f, -3.0f, 0.0f));
+    open = glm::rotate(open, glm::radians(open_angle), glm::vec3(0.0f, 0.0f, 1.0f));
+    open = glm::translate(open, glm::vec3(3.0f, 0.0f, 0.0f));
 
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
     for (int i = 0; i < 9; ++i) {
@@ -219,6 +235,7 @@ GLvoid drawScene(GLvoid) {
                 if (j == 6) {
 
                     glUniform3fv(color, 1, glm::value_ptr(white_color));
+                    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(open));
                     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
                 }
             }
@@ -272,6 +289,11 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         if (ball_count < 5) {
             ++ball_count;
         }
+        break;
+
+    case 'o':
+        flag_open = true;
+
         break;
 
     case 'q':
@@ -416,11 +438,14 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
 GLvoid timer(int value) {
 
 
-    if (dir < 0 && rotate_by_mouse < 60) {
-        rotate_by_mouse += 0.5f;
+    if (dir < 0) {
+        rotate_by_mouse += 1.0f;
     }
-    else if (dir > 0 && rotate_by_mouse >-60) {
-        rotate_by_mouse -= 0.5f;
+    else if (dir > 0) {
+        rotate_by_mouse -= 1.0f;
+    }
+    if (rotate_by_mouse > 360 || rotate_by_mouse < -360) {
+        rotate_by_mouse = 0;
     }
     /*auto currentTime = std::chrono::high_resolution_clock::now();
     std::chrono::duration<float> pass_time = currentTime - lastMoustTime;
@@ -437,9 +462,48 @@ GLvoid timer(int value) {
             rotate_by_mouse -= 1.0f;
         }
     }*/
+    if (rotate_by_mouse == 0) {
+        flag_x_down = false;
+        flag_x_up = false;
+        flag_y_down = true;
+        flag_y_up = false;
+    }
+    if ((0 < rotate_by_mouse && rotate_by_mouse < 90)||
+        (-360 < rotate_by_mouse && rotate_by_mouse < -270)) {
+        flag_x_down = true;
+        flag_x_up = false;
+        flag_y_down = true;
+        flag_y_up = false;
+    }
+    if ((90 < rotate_by_mouse && rotate_by_mouse < 180)||
+        (-270 < rotate_by_mouse && rotate_by_mouse < -180)) {
+        flag_x_down = true;
+        flag_x_up = false;
+        flag_y_down = false;
+        flag_y_up = true;
+    }
+    if ((-90 < rotate_by_mouse && rotate_by_mouse < 0) ) {
+        flag_x_down = false;
+        flag_x_up = true;
+        flag_y_down = true;
+        flag_y_up = false;
+    }
+    if ((270 < rotate_by_mouse && rotate_by_mouse < 360)) {
+        flag_x_down = false;
+        flag_x_up = true;
+        flag_y_down = true;
+        flag_y_up = false;
+    }
+    if ((-180 < rotate_by_mouse && rotate_by_mouse < -90) ||
+        (180 < rotate_by_mouse && rotate_by_mouse < 270)) {
+        flag_x_down = false;
+        flag_x_up = true;
+        flag_y_down = false;
+        flag_y_up = true;
+    }
 
 
-    if (rotate_by_mouse > 0) {
+    if (flag_x_down) {
         if (cube_x[0] > -2.75)
             cube_x[0] -= 0.05f;
         if (cube_x[1] > -2.78)
@@ -448,7 +512,7 @@ GLvoid timer(int value) {
             cube_x[2] -= 0.05f;
 
     }
-    else if (rotate_by_mouse < 0){
+    if (flag_x_up){
         if (cube_x[0] < 2.75)
             cube_x[0] += 0.05f;
         if (cube_x[1] < 2.78)
@@ -456,23 +520,70 @@ GLvoid timer(int value) {
         if (cube_x[2] < 2.85)
             cube_x[2] += 0.05f;
     }
+    if (flag_y_down) {
+        if(not flag_open){
+            if (cube_y[0] > 0)
+                cube_y[0] -= 0.05f;
+            if (cube_y[1] > -0)
+                cube_y[1] -= 0.05f;
+            if (cube_y[2] > -0)
+                cube_y[2] -= 0.05f;
+        }
+        else {
+            cube_y[0] -= 0.05f;
+            
+            cube_y[1] -= 0.05f;
+            
+            cube_y[2] -= 0.05f;
+        }
 
+    }
+    if (flag_y_up) {
+        if (cube_y[0] < 2.75 - cube_first_y[0])
+            cube_y[0] += 0.05f;
+        if (cube_y[1] < 2.78 - cube_first_y[1])
+            cube_y[1] += 0.05f;
+        if (cube_y[2] < 2.85 - cube_first_y[2])
+            cube_y[2] += 0.05f;
+    }
 
     for (int i = 0; i < ball_count + 1; ++i) {
-        ball_x[i] += ball_dx[i];
-        ball_y[i] += ball_dy[i];
-        if (ball_x[i] > 2.75) {
-            ball_dx[i] = -0.1f;
+        if(not flag_open){
+            ball_x[i] += ball_dx[i];
+            ball_y[i] += ball_dy[i];
+            if (ball_x[i] > 2.75) {
+                ball_dx[i] = -0.1f;
+            }
+            if (ball_y[i] > 2.75) {
+                ball_dy[i] = -0.1f;
+            }
+            if (ball_x[i] < -2.75) {
+                ball_dx[i] = 0.1f;
+            }
+            if (ball_y[i] < -2.75) {
+                ball_dy[i] = 0.1f;
+            }
         }
-        if (ball_y[i] > 2.75) {
-            ball_dy[i] = -0.1f;
+        else {
+            ball_x[i] += ball_dx[i];
+            ball_y[i] += ball_dy[i];
+            if(ball_y[i]>-2.75){
+                if (ball_x[i] > 2.75) {
+                    ball_dx[i] = -0.1f;
+                }
+                if (ball_y[i] > 2.75) {
+                    ball_dy[i] = -0.1f;
+                }
+            }
+            if (ball_x[i] < -2.75) {
+                ball_dx[i] = 0.1f;
+            }
         }
-        if (ball_x[i] < -2.75) {
-            ball_dx[i] = 0.1f;
-        }
-        if (ball_y[i] < -2.75) {
-            ball_dy[i] = 0.1f;
-        }
+    }
+
+    if (flag_open) {
+        if(open_angle>-90)
+            open_angle -= 1.0f;
     }
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);

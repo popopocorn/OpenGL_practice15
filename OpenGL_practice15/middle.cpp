@@ -13,6 +13,8 @@
 //미리 선언할거
 #define vertex_shader_code "middle_vertex_shader.glsl"
 #define fragment_shader_code "middle_fragment_shader.glsl"
+#define number_of_shape 1
+
 std::random_device rd;
 std::mt19937 g(rd());
 
@@ -41,12 +43,12 @@ GLvoid init_buffer();
 GLclampf base_r = 0.0f;
 GLclampf base_g = 0.0f;
 GLclampf base_b = 0.0f;
-GLint width{ 800 }, height{ 1100 };
+GLint width{ 800 }, height{ 600 };
 
 typedef struct shapes {
     GLuint VAO, VBO, EBO;
-    std::vector<float> vertices;
-    glm::vec3 body_color = glm::vec3(0.0f, 0.0f, 1.0f);
+    std::vector<glm::vec3> vertices;
+    glm::vec3 body_color = glm::vec3(0.0f, 0.0f, 0.0f);
     int num_of_point{};
     int num_of_face{};
     std::vector<unsigned int>index_list;
@@ -55,14 +57,16 @@ typedef struct shapes {
 
 
     void init() {
-        num_of_point = rand() % 4 + 3;  
+
+        body_color = glm::vec3(float(g() %  1000) / 1000.0f, float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f);
+        num_of_point = g() % 4 + 3;  
 
         switch (num_of_point) {
         case 3: // 삼각형
             vertices = {
-                0.0f,  0.15f, 0.0f,  // 위
-               -0.15f, -0.15f, 0.0f,  // 왼쪽
-                0.15f, -0.15f, 0.0f   // 오른쪽
+                glm::vec3(0.0f,  0.15f, 0.0f),  // 위
+               glm::vec3(-0.15f, -0.15f, 0.0f),  // 왼쪽
+                glm::vec3(0.15f, -0.15f, 0.0f)   // 오른쪽
             };
             index_list = { 0, 1, 2 };  // 삼각형의 인덱스
             num_of_face = 1;
@@ -70,10 +74,10 @@ typedef struct shapes {
 
         case 4: // 사각형
             vertices = {
-                -0.15f,  0.15f, 0.0f,  // 왼쪽 위
-                 0.15f,  0.15f, 0.0f,   // 오른쪽 위
-                 0.15f, -0.15f, 0.0f,   // 오른쪽 아래
-                -0.15f, -0.15f, 0.0f   // 왼쪽 아래
+                glm::vec3(-0.15f,  0.15f, 0.0f),  // 왼쪽 위
+                 glm::vec3(0.15f,  0.15f, 0.0f),   // 오른쪽 위
+                 glm::vec3(0.15f, -0.15f, 0.0f),   // 오른쪽 아래
+                glm::vec3(-0.15f, -0.15f, 0.0f)   // 왼쪽 아래
             };
             index_list = { 0, 1, 2, 0, 2, 3 };  
             num_of_face = 2;
@@ -81,11 +85,11 @@ typedef struct shapes {
 
         case 5: // 오각형
             vertices = {
-                0.0f,  0.15f, 0.0f,   // 상단
-                0.15f,  0.05f, 0.0f,  // 오른쪽 위
-                0.09f, -0.2f, 0.0f,   // 오른쪽 아래
-               -0.09f, -0.2f, 0.0f,   // 왼쪽 아래
-               -0.15f,  0.05f, 0.0f   // 왼쪽 위
+                glm::vec3(0.0f,  0.15f, 0.0f),   // 상단
+                glm::vec3(0.15f,  0.05f, 0.0f),  // 오른쪽 위
+                glm::vec3(0.09f, -0.2f, 0.0f),   // 오른쪽 아래
+               glm::vec3(-0.09f, -0.2f, 0.0f),   // 왼쪽 아래
+               glm::vec3(-0.15f,  0.05f, 0.0f)   // 왼쪽 위
             };
             index_list = { 0, 1, 2, 0, 2, 3, 0, 3, 4 };  
             num_of_face = 3;
@@ -93,12 +97,12 @@ typedef struct shapes {
 
         case 6: // 육각형
             vertices = {
-                0.0f,  0.15f, 0.0f,   // 상단
-                0.15f,  0.075f, 0.0f, // 오른쪽 위
-                0.15f, -0.075f, 0.0f, // 오른쪽 아래
-                0.0f, -0.15f, 0.0f,   // 하단
-               -0.15f, -0.075f, 0.0f, // 왼쪽 아래
-               -0.15f,  0.075f, 0.0f  // 왼쪽 위
+                glm::vec3(0.0f,  0.15f, 0.0f),   // 상단
+                glm::vec3(0.15f,  0.075f, 0.0f), // 오른쪽 위
+                glm::vec3(0.15f, -0.075f, 0.0f), // 오른쪽 아래
+                glm::vec3(0.0f, -0.15f, 0.0f),   // 하단
+               glm::vec3(-0.15f, -0.075f, 0.0f), // 왼쪽 아래
+               glm::vec3(-0.15f,  0.075f, 0.0f)  // 왼쪽 위
             };
             index_list = { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 };  
             num_of_face = 4;
@@ -128,6 +132,7 @@ typedef struct shapes {
 };
 
 bool flag_drag;
+bool flag_wired;
 
 float mouse_first_x;
 float mouse_first_y;
@@ -141,8 +146,10 @@ glm::vec3 red_color(1.0f, 0.0f, 0.0f);
 //------------------------------------------------------
 //필요한 함수 선언
 
+void is_hit(int);
 
-shapes s[10];
+
+shapes s[number_of_shape];
 //------------------------------------------------------
 void main(int argc, char** argv) {
     glutInit(&argc, argv);
@@ -167,7 +174,7 @@ void main(int argc, char** argv) {
 
     init_buffer();
 
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < number_of_shape; ++i) {
         s[i].init();
     }
 
@@ -190,7 +197,28 @@ GLvoid drawScene(GLvoid) {
     GLuint trans_mat = glGetUniformLocation(shader_program, "trans");
 
     glm::mat4 temp(1.0f);
-    if(flag_drag){
+
+    if(not flag_wired){
+        for (int i = 0; i < number_of_shape; ++i) {
+            glUniform3fv(color, 1, glm::value_ptr(s[i].body_color));
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+            glBindVertexArray(s[i].VAO);
+            glDrawElements(GL_TRIANGLES, s[i].num_of_face * 3, GL_UNSIGNED_INT, 0);
+        }
+    }
+    else {
+        for (int i = 0; i < number_of_shape; ++i) {
+            glUniform3fv(color, 1, glm::value_ptr(s[i].body_color));
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+            glBindVertexArray(s[i].VAO);
+            glDrawElements(GL_LINE_STRIP, s[i].num_of_face * 3 + 1, GL_UNSIGNED_INT, 0);
+        }
+    }
+
+
+
+
+    if (flag_drag) {
         glLineWidth(3.0f);
         glUniform3fv(color, 1, glm::value_ptr(red_color));
         glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
@@ -198,14 +226,6 @@ GLvoid drawScene(GLvoid) {
         glDrawArrays(GL_LINES, 0, 2);
 
     }
-    for (int i = 0; i < 10; ++i) {
-        glUniform3fv(color, 1, glm::value_ptr(red_color));
-        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
-        glBindVertexArray(s[i].VAO);
-        glDrawElements(GL_TRIANGLES, s[i].num_of_face * 3, GL_UNSIGNED_INT, 0);
-    }
-
-
     glutSwapBuffers();
 }
 GLvoid Reshape(int w, int h) {
@@ -214,7 +234,9 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
-
+    case 'l':
+        flag_wired = !flag_wired;
+        break;
 
     case 'q':
         glutLeaveMainLoop();
@@ -330,6 +352,9 @@ GLvoid Mouse(int button, int state, int x, int y) {
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(mouse_line), mouse_line);
     }
     else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
+        for (int i = 0; i < number_of_shape; ++i) {
+            is_hit(i);
+        }
         flag_drag = false;
     }
     glutPostRedisplay();
@@ -355,4 +380,10 @@ GLvoid timer(int value) {
     
     glutTimerFunc(60, timer, 0);
     glutPostRedisplay();
+}
+
+void is_hit(int index) {
+    s[index].vertices;
+
+
 }
