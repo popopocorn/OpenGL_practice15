@@ -6,10 +6,8 @@
 #include<gl/glm/glm.hpp>
 #include<gl/glm/gtc/matrix_transform.hpp>
 #include"file_open.h"
-#include"read_obj.h"
 #include<vector>
 #include<random>
-#include<chrono>
 
 
 //미리 선언할거
@@ -42,33 +40,35 @@ GLuint make_shader();
 GLvoid init_buffer();
 //------------------------------------------------------
 //전역변수
-GLclampf base_r = 0.0f;
-GLclampf base_g = 0.0f;
-GLclampf base_b = 0.0f;
+GLclampf base_r = 1.0f;
+GLclampf base_g = 1.0f;
+GLclampf base_b = 1.0f;
 GLint width{ 800 }, height{ 600 };
+
+int cnt;
+float speed{-0.01};
 
 typedef struct shapes {
     GLuint VAO, VBO, EBO;
     std::vector<glm::vec3> vertices;
-    glm::vec3 body_color = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 body_color = glm::vec3(float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f);
     int num_of_point{};
     int num_of_face{};
-    float dx{};
-    float dy{};
+    float dx{speed};
+    float dy{0.01};
     float x{};
     float y{};
     float first_x{ 1.0 };
-    float first_y{};
+    float first_y{-0.1};
     float angle{};
-    bool split = false;
     std::vector<unsigned int>index_list;
     glm::mat4 mod_trans = glm::mat4(1.0f);
-    shapes* other;
+    std::vector<glm::vec3> vertices_cpy;
 
     void init();
     void init_mat();
     void gen_buffuer();
-    void update_buffer();
+    void update_position();
 };
 void shapes::gen_buffuer() {
     // 버퍼 생성
@@ -85,15 +85,15 @@ void shapes::gen_buffuer() {
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
-
+    vertices_cpy = vertices;
 }
 void shapes::init_mat() {
     mod_trans = glm::translate(mod_trans, glm::vec3(first_x + x, first_y + y, 0.0f));
     mod_trans = glm::rotate(mod_trans, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+    
 
 
-
-    body_color = glm::vec3(float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f, float(g() % 1000) / 1000.0f);
+    
 }
 void shapes::init() {
     init_mat();
@@ -153,14 +153,19 @@ void shapes::init() {
     }
     gen_buffuer();
 }
-void shapes::update_buffer() {
-    num_of_point = vertices.size();
-    num_of_face = num_of_point - 2;
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertices.size() * 3, vertices.data(), GL_DYNAMIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_of_face * 3 * sizeof(unsigned int), index_list.data(), GL_STATIC_DRAW);
+void shapes::update_position() {
+    x += dx;
+    y += dy;
+    dy -= 0.0001f;
+    mod_trans = glm::mat4(1.0f); // 매번 초기화 후 변환 적용
+    mod_trans = glm::translate(mod_trans, glm::vec3(first_x + x, first_y + y, 0.0f));
+    mod_trans = glm::rotate(mod_trans, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+    for (int i = 0; i < vertices.size(); ++i) {
+        glm::vec4 temp = mod_trans * glm::vec4(vertices_cpy[i].x, vertices_cpy[i].y, vertices_cpy[i].z, 1.0f);
+        vertices[i] = glm::vec3(temp.x, temp.y, temp.z);
+    }
+    angle += 1.0f;
 }
 
 bool flag_drag;
@@ -213,7 +218,7 @@ void main(int argc, char** argv) {
     glutKeyboardFunc(Keyboard);
     glutMouseFunc(Mouse);
     glutMotionFunc(MoveMouse);
-    glutTimerFunc(60, timer, 0);
+    glutTimerFunc(10, timer, 0);
     shapes first;
     first.init();
     s.push_back(first);
@@ -245,6 +250,7 @@ GLvoid drawScene(GLvoid) {
     if(not flag_wired){
         for (int i = 0; i < s.size(); ++i) {
             glUniform3fv(color, 1, glm::value_ptr(s[i].body_color));
+            
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(s[i].mod_trans));
             glBindVertexArray(s[i].VAO);
             glDrawElements(GL_TRIANGLES, s[i].num_of_face * 3, GL_UNSIGNED_INT, 0);
@@ -253,10 +259,11 @@ GLvoid drawScene(GLvoid) {
     else {
         for (int i = 0; i < s.size(); ++i) {
             glUniform3fv(color, 1, glm::value_ptr(s[i].body_color));
+            
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(s[i].mod_trans));
             glBindVertexArray(s[i].VAO);
-            //glDrawElements(GL_LINE_STRIP, s[i].num_of_face * 3 + 1, GL_UNSIGNED_INT, 0);
-            glDrawArrays(GL_POINTS, 0, s[i].vertices.size());
+            glDrawElements(GL_LINE_STRIP, s[i].num_of_face * 3 + 1, GL_UNSIGNED_INT, 0);
+            //glDrawArrays(GL_POINTS, 0, s[i].vertices.size());
 
         }
     }
@@ -280,6 +287,28 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
+    case ']':
+        speed -= 0.005;
+        for (int i = 0; i < s.size(); ++i) {
+            if (s[i].dx != 0) {
+                
+                s[i].dx = speed;
+            }
+        }
+        break;
+
+    case'[':
+
+        speed += 0.005;
+
+        for (int i = 0; i < s.size(); ++i) {
+            if (s[i].dx != 0) {
+                s[i].dx = speed;
+            }
+        }
+        break;
+
+
     case 'l':
         flag_wired = !flag_wired;
         break;
@@ -426,12 +455,17 @@ GLvoid MoveMouse(int x, int y) {
 }
 GLvoid timer(int value) {
     for (int i = 0; i < s.size(); ++i) {
-        for (int j = 0; j < s[i].vertices.size(); ++j) {
-            
+        s[i].update_position();
+        if (s[i].x < -2.0 || s[i].y < -2.0f) {
+            s.erase(s.begin() + i);
         }
     }
-    
-    glutTimerFunc(60, timer, 0);
+    ++cnt;
+    if (cnt == 100) {
+        create_shape();
+        cnt = 0;
+    }
+    glutTimerFunc(10, timer, 0);
     glutPostRedisplay();
 }
 
@@ -570,6 +604,11 @@ void spilt_shape(int index , std::vector<glm::vec3> intersections) {
         temp_list1.push_back(i + 2);
     }
     top.index_list = temp_list1;
+    top.first_x = 0;
+    top.first_y = 0;
+    top.dx = 0;
+    top.dy = -0.01f;
+
     top.gen_buffuer();
     top.init_mat();
 
@@ -582,6 +621,11 @@ void spilt_shape(int index , std::vector<glm::vec3> intersections) {
         temp_list2.push_back(i + 2);
     }
     bottom.index_list = temp_list2;
+
+    bottom.first_x = 0;
+    bottom.first_y = 0;
+    bottom.dx = 0;
+    bottom.dy = -0.02f;
     bottom.gen_buffuer();
     bottom.init_mat();
 
