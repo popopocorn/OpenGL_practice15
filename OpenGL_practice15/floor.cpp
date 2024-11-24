@@ -7,7 +7,21 @@
 #include"file_open.h"
 #include"read_obj.h"
 #include"floor.h"
+#include<random>
 
+std::random_device(frd);
+std::mt19937 fg(frd());
+
+/*
+    Model model;
+    float x;
+    float y;
+    float z;
+    float dy;
+    float gravity;
+    GLuint VAO, VBO, EBO;
+    glm::mat4 trans;
+*/
 
 aabb my_floor::get_aabb() {
     aabb temp = { x - 1.0f, x + 1.0f, y - 1.0f, y + 1.0f, z - 1.0f, z + 1.0f };
@@ -16,9 +30,19 @@ aabb my_floor::get_aabb() {
 void my_floor::init() {
     read_obj_file("cube.obj", &model);
     x = 0;
-    y = 0;
+    y = -0.8;
+    z = 0.0;
     dy = 0;
+    scale = 3.0f;
+    gravity = 0.098;
+    is_down = fg() % 10;
+    type = "floor";
+
     trans = glm::mat4(1.0f);
+    color = glm::vec3(1.0f, 0.0f, 1.0f);
+    trans = glm::mat4(1.0f);
+    trans = glm::translate(trans, glm::vec3(x, y, z));
+    trans = glm::scale(trans, glm::vec3(scale, scale, scale));
 
     gen_buffuer();
 }
@@ -39,13 +63,16 @@ void my_floor::gen_buffuer() {
 }
 void my_floor::update_position() {
     y += dy;
-    dy += gravity;
+    
     trans = glm::mat4(1.0f);
-    trans = glm::translate(trans, glm::vec3(0.0f, dy, 0.0f));
-    trans = glm::scale(trans, glm::vec3(2.0f, 2.0f, 2.0f));
+    trans = glm::translate(trans, glm::vec3(x, y, z));
+    trans = glm::scale(trans, glm::vec3(scale, scale, scale));
 }
 
 
-my_floor::my_floor(int value) {
-
+my_floor::my_floor(float inx, float inz) {
+    init();
+    x = inx;
+    z = inz;
+    gen_buffuer();
 }

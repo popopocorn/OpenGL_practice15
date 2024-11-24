@@ -85,7 +85,7 @@ int sp_point{ };
 int click_area(GLclampf x, GLclampf y);
 void create_tri(int, GLclampf, GLclampf);
 void init_tri();
-
+bool coliide(int);
 
 //------------------------------------------------------
 void main(int argc, char** argv) {

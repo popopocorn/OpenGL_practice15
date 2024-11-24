@@ -5,6 +5,7 @@
 #include<gl/glm/ext.hpp>
 #include<gl/glm/glm.hpp>
 #include<gl/glm/gtc/matrix_transform.hpp>
+#include<string>
 
 
 struct aabb
@@ -20,15 +21,22 @@ struct aabb
 typedef struct my_floor
 {
     Model model;
+    float scale;
     float x;
     float y;
     float z;
     float dy;
     float gravity;
+    
+    std::string type;
+    bool is_down;
+
     GLuint VAO, VBO, EBO;
     glm::mat4 trans;
+    glm::vec3 color;
 
-    my_floor(int);
+    my_floor() = default;
+    my_floor(float, float);
     aabb get_aabb();
     void init();
 
