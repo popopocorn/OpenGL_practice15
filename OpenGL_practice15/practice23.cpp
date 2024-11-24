@@ -163,6 +163,9 @@ void initialize_floors() {
             ++index;
         }
     }
+    for (int i = 3; i < 10; ++i) {
+        obs[i].init();
+    }
 }
 
 /*
@@ -680,7 +683,7 @@ GLvoid timer(int value) {
             
             flag_jump = true;
         }
-        if (i < 3) {
+        if (i < 10) {
             if(obs[i].type=="obs"){
                 if (collide(obs[i].get_aabb(), obs[i].get_aabb()) && robot_y >= obs[i].get_aabb().y2 - 0.5) {
                     obs[i].dy = -0.02f;
