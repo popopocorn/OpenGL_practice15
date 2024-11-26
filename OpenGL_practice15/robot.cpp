@@ -7,6 +7,7 @@
 #include"file_open.h"
 #include"read_obj.h"
 #include"robot.h"
+#include"floor.h"
 #include<random>
 
 
@@ -14,6 +15,8 @@ robot::robot(float size) {
     robot_dx = 0;
     robot_dy = 0;
     robot_dz = 0;
+
+    scale = size;
 
     x = 0;
     y = 0.1;
@@ -90,9 +93,11 @@ robot::robot(float size) {
     
 
     for (int i = 0; i < 7; ++i) {
+        
         trans[i] = glm::mat4(1.0f);
         trans[i] = glm::translate(trans[i], glm::vec3(x, y + 2.0f, z));
         trans[i] = glm::rotate(trans[i], glm::radians(float(rotate_robot)), glm::vec3(0.0f, 1.0f, 0.0f));
+        trans[i] = glm::scale(trans[i], glm::vec3(scale, scale, scale));
         trans[i] = glm::translate(trans[i], glm::vec3(first_x[i], first_y[i], first_z[i]));
         trans[i] = glm::translate(trans[i], glm::vec3(0.0f, -swing_y[i], 0.0f));
         trans[i] = glm::rotate(trans[i], glm::radians(float(swing_angle[i])), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -124,8 +129,10 @@ void robot::gen_buffer() {
 void robot::update_position() {
     for (int i = 0; i < 7; ++i) {
         trans[i] = glm::mat4(1.0f);
+        
         trans[i] = glm::translate(trans[i], glm::vec3(x, y + 2.0f, z));
         trans[i] = glm::rotate(trans[i], glm::radians(float(rotate_robot)), glm::vec3(0.0f, 1.0f, 0.0f));
+        trans[i] = glm::scale(trans[i], glm::vec3(scale, scale, scale));
         trans[i] = glm::translate(trans[i], glm::vec3(first_x[i], first_y[i], first_z[i]));
         trans[i] = glm::translate(trans[i], glm::vec3(0.0f, -swing_y[i], 0.0f));
         trans[i] = glm::rotate(trans[i], glm::radians(float(swing_angle[i])), glm::vec3(1.0f, 0.0f, 0.0f));

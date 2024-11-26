@@ -104,7 +104,7 @@ glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
 
 
 
-robot robots{0.0f};
+robot robots{1.0f};
 
 my_floor floors[64];
 my_floor obs[10];
@@ -534,7 +534,7 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
 GLvoid timer(int value) {
 
 
-
+    
 
     if (flag_open) {
         if (open_x[0] > -3.0f) {
@@ -672,91 +672,6 @@ void reset() {
     flag_open = 0;
     flag_walk = 0;
     flag_jump = true;
-
-    for (int i = 0; i < 7; ++i) {
-        scale_x[i] = { 1.0f };
-        scale_y[i] = { 1.0f };
-        scale_z[i] = { 1.0f };
-
-        first_x[i] = 0;
-        first_y[i] = 0;
-        first_z[i] = 0;
-        swing_y[i] = 0;
-        swing_angle[i] = 0;
-        swing_da[i] = 0;
-    }
-
-    robot_dx = 0;
-    robot_dy = 0;
-    robot_dz = 0;
-
-    robot_x = 0;
-    robot_y = 0.1;
-    robot_z = 0;
-
-    robot_speed = 0.02;
-
-    jump_speed = 0.1;
-
-
-    max_swing = 30;
-    swing_speed = 1.5f;
-
-    rotate_robot = 0;
-
-
-    //¸ö
-    scale_x[0] = 1.0f;
-    scale_z[0] = 1.0f;
-    scale_y[0] = 2.0f;
-    first_y[0] = -1.0f;
-
-
-    //¸Ó¸®
-    scale_x[1] = 0.7f;
-    scale_y[1] = 0.7f;
-    scale_z[1] = 0.7f;
-    first_y[1] = -0.4f;
-
-    //¿ÞÆÈ
-    scale_x[2] = 0.35f;
-    scale_z[2] = 0.35f;
-    scale_y[2] = 1.3f;
-    first_x[2] = -0.3f;
-    first_y[2] = -1.0f;
-    swing_y[2] = -0.3;
-
-    //¿À¸¥ÆÈ
-    scale_x[3] = 0.35f;
-    scale_z[3] = 0.35f;
-    scale_y[3] = 1.3f;
-    first_x[3] = 0.3f;
-    first_y[3] = -1.0f;
-    swing_y[3] = -0.3;
-
-    //¿Þ´Ù¸®
-    scale_x[4] = 0.35f;
-    scale_z[4] = 0.35f;
-    scale_y[4] = 1.5f;
-    first_x[4] = -0.1f;
-    first_y[4] = -1.75f;
-    swing_y[4] = -0.4;
-
-    //¿À¸¥´Ù¸®
-    scale_x[5] = 0.35f;
-    scale_z[5] = 0.35f;
-    scale_y[5] = 1.5f;
-    first_x[5] = 0.1f;
-    first_y[5] = -1.75f;
-    swing_y[5] = -0.4;
-
-    //ÄÚ
-    scale_x[6] = 0.1f;
-    scale_y[6] = 0.1f;
-    scale_z[6] = 0.3f;
-    first_y[6] = -0.4f;
-    first_z[6] = 0.2f;
-
 }
 
 bool collide(int idx) {
@@ -780,11 +695,11 @@ bool collide(int idx) {
 }
 
 bool collide(aabb first, aabb second) {
-    if (robot_x + 0.05 < second.x1) return false;
-    if (robot_x - 0.05 > second.x2) return false;
-    if (robot_y + 0.1 < second.y1) return false;
-    if (robot_y > second.y2) return false;
-    if (robot_z + 0.05 < second.z1) return false;
-    if (robot_z - 0.05 > second.z2) return false;
+    if (first.x2< second.x1) return false;
+    if (first.x1 > second.x2) return false;
+    if (first.y2 < second.y1) return false;
+    if (first.y1 > second.y2) return false;
+    if (first.z2 < second.z1) return false;
+    if (first.z1 > second.z2) return false;
     return true;
 }

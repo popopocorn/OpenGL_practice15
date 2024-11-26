@@ -1,9 +1,11 @@
 #pragma once
 
+
 struct robot {
     float x;
     float y;
     float z;
+    float scale;
 
     float scale_x[7];
     float scale_y[7];
@@ -38,4 +40,6 @@ struct robot {
 
     void gen_buffer();
     void update_position();
+
+    //aabb get_aabb();
 };
