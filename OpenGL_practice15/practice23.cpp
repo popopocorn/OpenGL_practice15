@@ -11,6 +11,7 @@
 #include<random>
 #include"floor.h"
 #include"robot.h"
+#include"aabb.h"
 //미리 선언할거
 #define vertex_shader_code "21_Vertex_shader.glsl"
 #define fragment_shader_code "21_Fragment_shader.glsl"
@@ -53,44 +54,10 @@ float camera_x;
 float camera_y;
 float camera_z;
 
-bool flag_n_x = true;
-bool flag_p_x = true;
-bool flag_n_z = true;
-bool flag_p_z = true;
 
 bool flag_open;
 bool flag_walk;
 bool flag_jump;
-
-float scale_x[7] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-float scale_y[7] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-float scale_z[7] = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-
-float first_x[7];
-float first_y[7];
-float first_z[7];
-
-float robot_dx;
-float robot_dy;
-float robot_dz;
-
-float robot_x;
-float robot_y{ 0.1 };
-float robot_z;
-
-float robot_speed{ 0.04 };
-
-float jump_speed{ 0.1f };
-
-float swing_y[7];
-int swing_angle[7];
-float swing_da[7];
-int max_swing{ 30 };
-float swing_speed{ 1.5f };
-
-int rotate_robot{ };
-
-
 
 
 glm::vec3 body_color(0.0f, 0.0f, 1.0f);
@@ -107,7 +74,7 @@ glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
 robot robots{1.0f};
 
 my_floor floors[64];
-my_floor obs[10];
+my_floor obs[14];
 //------------------------------------------------------
 //필요한 함수 선언
 std::random_device(rd);
@@ -165,9 +132,31 @@ void initialize_floors() {
             ++index;
         }
     }
-    for (int i = 3; i < 10; ++i) {
+    for (int i = 3; i < 14; ++i) {
         obs[i].init();
     }
+    for (int i = 3; i < 10; ++i) {
+        read_obj_file("cube.obj", &obs[i].model);
+        obs[i].type = "pill";
+    }
+    obs[3].y = 1.0f;
+    obs[3].x = 2.0f;
+    obs[4].y = 2.5f;
+    obs[4].x = 2.0f;
+    obs[5].y = 4.0f;
+    obs[5].x = 2.0f;
+    obs[6].y = 4.0f;
+    obs[6].x = 3.5f;
+    obs[7].y = 5.5f;
+    obs[7].x = 5.0f;
+    obs[7].y = 4.0f;
+    obs[7].x = 5.0f;
+    obs[8].y = 2.5f;
+    obs[8].x = 5.0f;
+    obs[9].y = 1.0f;
+    obs[9].x = 5.0f;
+
+
 }
 
 /*
@@ -258,6 +247,7 @@ GLvoid drawScene(GLvoid) {
     for (int i = 0; i < 11; ++i) {
         if (i < 7) {
             glBindVertexArray(robots.VAO[i]);
+            robots.update_position();
             glUniform3fv(color, 1, glm::value_ptr(robots.color[i]));
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(robots.trans[i]));
             glDrawElements(GL_TRIANGLES, robots.body[i].face_count * 3, GL_UNSIGNED_INT, 0);
@@ -297,7 +287,7 @@ GLvoid drawScene(GLvoid) {
         glUniform3fv(color, 1, glm::value_ptr(floors[i].color));
         glDrawElements(GL_TRIANGLES, floors[i].model.face_count*3, GL_UNSIGNED_INT, 0);
     }
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 14; ++i) {
         glBindVertexArray(obs[i].VAO);
         obs[i].update_position();
         glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(obs[i].trans));
@@ -319,70 +309,70 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case 'w':
         flag_walk = true;
-        rotate_robot = 180;
-        swing_da[2] = swing_speed;
-        swing_da[3] = -swing_speed;
-        swing_da[4] = swing_speed;
-        swing_da[5] = -swing_speed;
-        robot_dz = -robot_speed;
-        robot_dx = 0;
-        robot_dy = 0;
+        robots.rotate_robot = 180;
+        robots.swing_da[2] = robots.swing_speed;
+        robots.swing_da[3] = -robots.swing_speed;
+        robots.swing_da[4] = robots.swing_speed;
+        robots.swing_da[5] = -robots.swing_speed;
+        robots.robot_dz = -robots.robot_speed;
+        robots.robot_dx = 0;
+        robots.robot_dy = 0;
 
         break;
 
     case 's':
         flag_walk = true;
-        rotate_robot = 0;
-        swing_da[2] = swing_speed;
-        swing_da[3] = -swing_speed;
-        swing_da[4] = swing_speed;
-        swing_da[5] = -swing_speed;
-        robot_dz = robot_speed;
-        robot_dx = 0;
-        robot_dy = 0;
+        robots.rotate_robot = 0;
+        robots.swing_da[2] = robots.swing_speed;
+        robots.swing_da[3] = -robots.swing_speed;
+        robots.swing_da[4] = robots.swing_speed;
+        robots.swing_da[5] = -robots.swing_speed;
+        robots.robot_dz = robots.robot_speed;
+        robots.robot_dx = 0;
+        robots.robot_dy = 0;
 
         break;
 
     case 'a':
         flag_walk = true;
-        rotate_robot = -90;
-        swing_da[2] = swing_speed;
-        swing_da[3] = -swing_speed;
-        swing_da[4] = swing_speed;
-        swing_da[5] = -swing_speed;
-        robot_dx = -robot_speed;
-        robot_dy = 0;
-        robot_dz = 0;
+        robots.rotate_robot = -90;
+        robots.swing_da[2] = robots.swing_speed;
+        robots.swing_da[3] = -robots.swing_speed;
+        robots.swing_da[4] = robots.swing_speed;
+        robots.swing_da[5] = -robots.swing_speed;
+        robots.robot_dx = -robots.robot_speed;
+        robots.robot_dy = 0;
+        robots.robot_dz = 0;
 
         break;
 
     case 'd':
         flag_walk = true;
-        rotate_robot = 90;
-        swing_da[2] = swing_speed;
-        swing_da[3] = -swing_speed;
-        swing_da[4] = swing_speed;
-        swing_da[5] = -swing_speed;
-        robot_dx = robot_speed;
-        robot_dy = 0;
-        robot_dz = 0;
+        robots.rotate_robot = 90;
+        robots.swing_da[2] = robots.swing_speed;
+        robots.swing_da[3] = -robots.swing_speed;
+        robots.swing_da[4] = robots.swing_speed;
+        robots.swing_da[5] = -robots.swing_speed;
+        robots.robot_dx = robots.robot_speed;
+        robots.robot_dy = 0;
+        robots.robot_dz = 0;
         break;
 
     case'+':
-        robot_speed += 0.01f;
-        max_swing += 5.0f;
-        swing_speed += 1.0f;
+        robots.robot_speed += 0.01f;
+        robots.max_swing += 5.0f;
+        robots.swing_speed += 1.0f;
         break;
 
     case'-':
-        if (robot_speed > 0.02) {
-            robot_speed -= 0.01f;
+        if (robots.robot_speed > 0.02) {
+            robots.robot_speed -= 0.01f;
         }
-        if (robot_speed > 35.0f) {
-            max_swing -= 5.0f;
+        if (robots.robot_speed > 35.0f) {
+            robots.max_swing -= 5.0f;
         }
-        if (swing_speed > 2.0f) {
-            swing_speed -= 1.0f;
+        if (robots.swing_speed > 2.0f) {
+            robots.swing_speed -= 1.0f;
         }
         break;
 
@@ -390,7 +380,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         if (not flag_jump) {
             std::cout << "jump";
             flag_jump = true;
-            robot_dy = jump_speed;
+            robots.robot_dy = robots.jump_speed;
         }
         break;
     case'o':
@@ -553,60 +543,60 @@ GLvoid timer(int value) {
         }
     }
     if (flag_walk) {
-        robot_x += robot_dx;
+        robots.x += robots.robot_dx;
 
-        robot_z += robot_dz;
+        robots.z += robots.robot_dz;
 
         for (int i = 2; i < 6; ++i) {
-            swing_angle[i] += swing_da[i];
+            robots.swing_angle[i] += robots.swing_da[i];
         }
-        if (swing_angle[2] > max_swing) {
-            swing_da[2] = -swing_speed;
+        if (robots.swing_angle[2] > robots.max_swing) {
+            robots.swing_da[2] = -robots.swing_speed;
         }
-        if (swing_angle[2] < -max_swing) {
-            swing_da[2] = swing_speed;
-        }
-
-        if (swing_angle[3] < -max_swing) {
-            swing_da[3] = swing_speed;
-        }
-        if (swing_angle[3] > max_swing) {
-            swing_da[3] = -swing_speed;
+        if (robots.swing_angle[2] < -robots.max_swing) {
+            robots.swing_da[2] = robots.swing_speed;
         }
 
-        if (swing_angle[4] > max_swing) {
-            swing_da[4] = -swing_speed;
+        if (robots.swing_angle[3] < -robots.max_swing) {
+            robots.swing_da[3] = robots.swing_speed;
         }
-        if (swing_angle[4] < -max_swing) {
-            swing_da[4] = swing_speed;
+        if (robots.swing_angle[3] > robots.max_swing) {
+            robots.swing_da[3] = -robots.swing_speed;
         }
 
-        if (swing_angle[5] < -max_swing) {
-            swing_da[5] = swing_speed;
+        if (robots.swing_angle[4] > robots.max_swing) {
+            robots.swing_da[4] = -robots.swing_speed;
         }
-        if (swing_angle[5] > max_swing) {
-            swing_da[5] = -swing_speed;
+        if (robots.swing_angle[4] < -robots.max_swing) {
+            robots.swing_da[4] = robots.swing_speed;
         }
-        if (robot_x < -5.8f) {
-            robot_dx = robot_speed;
-            rotate_robot += 180;
+
+        if (robots.swing_angle[5] < -robots.max_swing) {
+            robots.swing_da[5] = robots.swing_speed;
         }
-        if (robot_x > 5.8f) {
-            robot_dx = -robot_speed;
-            rotate_robot -= 180;
+        if (robots.swing_angle[5] > robots.max_swing) {
+            robots.swing_da[5] = -robots.swing_speed;
         }
-        if (robot_z < -5.8f) {
-            robot_dz = robot_speed;
-            rotate_robot += 180;
+        if (robots.x < -5.8f) {
+            robots.robot_dx = robots.robot_speed;
+            robots.rotate_robot += 180;
         }
-        if (robot_z > 5.8f) {
-            robot_dz = -robot_speed;
-            rotate_robot -= 180;
+        if (robots.x > 5.8f) {
+            robots.robot_dx = -robots.robot_speed;
+            robots.rotate_robot -= 180;
+        }
+        if (robots.z < -5.8f) {
+            robots.robot_dz = robots.robot_speed;
+            robots.rotate_robot += 180;
+        }
+        if (robots.z > 5.8f) {
+            robots.robot_dz = -robots.robot_speed;
+            robots.rotate_robot -= 180;
         }
     }
     else {
         for (int i = 2; i < 6; ++i) {
-            swing_angle[i] = 0;
+            robots.swing_angle[i] = 0;
         }
     }
     for (int i = 0; i < 64; ++i) {
@@ -614,12 +604,12 @@ GLvoid timer(int value) {
             
             flag_jump = true;
         }
-        if (i < 10) {
+        if (i < 14) {
             if(obs[i].type=="obs"){
-                if (collide(obs[i].get_aabb(), obs[i].get_aabb()) && robot_y >= obs[i].get_aabb().y2 - 0.5) {
+                if (collide(robots.get_aabb(), obs[i].get_aabb()) && robots.y >= obs[i].get_aabb().y2 - 0.5) {
                     obs[i].dy = -0.02f;
                 }
-                else if (not collide(obs[i].get_aabb(), obs[i].get_aabb())) {
+                else if (not collide(robots.get_aabb(), obs[i].get_aabb())) {
                     if (obs[i].y < 0.4f)
                         obs[i].dy = 0.005f;
                     else
@@ -628,9 +618,11 @@ GLvoid timer(int value) {
             }
             if(obs[i].type=="pill"){
 
-                if (collide(obs[i].get_aabb(), obs[i].get_aabb()) && robot_y < obs[i].get_aabb().y2 - 0.5) {
-                    robot_dx = 0;
-                    robot_dz = 0;
+                if (collide(robots.get_aabb(), obs[i].get_aabb()) && robots.y < obs[i].get_aabb().y2 - 0.5) {
+                    if(robots.x < obs[i].get_aabb().x1 || robots.x > obs[i].get_aabb().x2)
+                        robots.robot_dx = 0;
+                    if (robots.z < obs[i].get_aabb().z1 || robots.z > obs[i].get_aabb().z2)
+                        robots.robot_dz = 0;
                 }
 
             }
@@ -639,14 +631,14 @@ GLvoid timer(int value) {
 
     }
 
-    robot_y += robot_dy;
+    robots.y += robots.robot_dy;
     if (flag_jump) {
 
-        robot_dy -= 0.002;
-        if (robot_dy <=0 ){
+        robots.robot_dy -= 0.002;
+        if (robots.robot_dy <=0 ){
             for (int i = 0; i < 64; ++i) {
-                if (collide(i) && robot_y >= floors[i].get_aabb().y2 - 0.5) {
-                    robot_dy = 0;
+                if (collide(i) && robots.y >= floors[i].get_aabb().y2 - 0.5) {
+                    robots.robot_dy = 0;
                     flag_jump = false;
                 }
             }
@@ -676,20 +668,20 @@ void reset() {
 
 bool collide(int idx) {
     if (idx < 3) {
-        if (robot_x + 0.05 < obs[idx].get_aabb().x1) return false;
-        if (robot_x - 0.05 > obs[idx].get_aabb().x2) return false;
-        if (robot_y < obs[idx].get_aabb().y1) return false;
-        if (robot_y > obs[idx].get_aabb().y2) return false;
-        if (robot_z + 0.05 < obs[idx].get_aabb().z1) return false;
-        if (robot_z - 0.05 > obs[idx].get_aabb().z2) return false;
+        if (robots.x + 0.05 < obs[idx].get_aabb().x1) return false;
+        if (robots.x - 0.05 > obs[idx].get_aabb().x2) return false;
+        if (robots.y < obs[idx].get_aabb().y1) return false;
+        if (robots.y > obs[idx].get_aabb().y2) return false;
+        if (robots.z + 0.05 < obs[idx].get_aabb().z1) return false;
+        if (robots.z - 0.05 > obs[idx].get_aabb().z2) return false;
         return true;
     }
-    if (robot_x + 0.05 < floors[idx].get_aabb().x1) return false;
-    if (robot_x - 0.05 > floors[idx].get_aabb().x2) return false;
-    if (robot_y < floors[idx].get_aabb().y1) return false;
-    if (robot_y > floors[idx].get_aabb().y2) return false;
-    if (robot_z + 0.05 < floors[idx].get_aabb().z1) return false;
-    if (robot_z - 0.05 > floors[idx].get_aabb().z2) return false;
+    if (robots.x + 0.05 < floors[idx].get_aabb().x1) return false;
+    if (robots.x - 0.05 > floors[idx].get_aabb().x2) return false;
+    if (robots.y < floors[idx].get_aabb().y1) return false;
+    if (robots.y > floors[idx].get_aabb().y2) return false;
+    if (robots.z + 0.05 < floors[idx].get_aabb().z1) return false;
+    if (robots.z - 0.05 > floors[idx].get_aabb().z2) return false;
     return true;
 
 }

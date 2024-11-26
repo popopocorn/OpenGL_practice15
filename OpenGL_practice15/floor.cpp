@@ -7,6 +7,7 @@
 #include"file_open.h"
 #include"read_obj.h"
 #include"floor.h"
+#include"aabb.h"
 #include<random>
 
 std::random_device(frd);

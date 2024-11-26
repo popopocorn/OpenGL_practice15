@@ -1,5 +1,5 @@
 #pragma once
-
+#include"aabb.h"
 
 struct robot {
     float x;
@@ -41,5 +41,5 @@ struct robot {
     void gen_buffer();
     void update_position();
 
-    //aabb get_aabb();
+    aabb get_aabb();
 };

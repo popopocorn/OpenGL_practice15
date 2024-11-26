@@ -229,6 +229,7 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="aabb.h" />
     <ClInclude Include="file_open.h" />
     <ClInclude Include="floor.h" />
     <ClInclude Include="read_obj.h" />

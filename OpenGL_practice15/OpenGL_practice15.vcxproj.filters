@@ -118,6 +118,9 @@
     <ClInclude Include="robot.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="aabb.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="07_Fragment_shader.glsl">

@@ -7,7 +7,7 @@
 #include"file_open.h"
 #include"read_obj.h"
 #include"robot.h"
-#include"floor.h"
+#include"aabb.h"
 #include<random>
 
 
@@ -38,6 +38,7 @@ robot::robot(float size) {
     scale_z[0] = 1.0f;
     scale_y[0] = 2.0f;
     first_y[0] = -1.0f;
+    color[0] = glm::vec3(0.0f, 0.0f, 1.0f);
 
 
     //¸Ó¸®
@@ -45,6 +46,7 @@ robot::robot(float size) {
     scale_y[1] = 0.7f;
     scale_z[1] = 0.7f;
     first_y[1] = -0.4f;
+    color[1] = glm::vec3(0.0f, 0.0f, 1.0f);
 
     //¿ÞÆÈ
     scale_x[2] = 0.35f;
@@ -53,6 +55,7 @@ robot::robot(float size) {
     first_x[2] = -0.3f;
     first_y[2] = -1.0f;
     swing_y[2] = -0.3;
+    color[2] = glm::vec3(1.0f, 0.0f, 1.0f);
 
     //¿À¸¥ÆÈ
     scale_x[3] = 0.35f;
@@ -61,6 +64,7 @@ robot::robot(float size) {
     first_x[3] = 0.3f;
     first_y[3] = -1.0f;
     swing_y[3] = -0.3;
+    color[3] = glm::vec3(0.0f, 1.0f, 1.0f);
 
     //¿Þ´Ù¸®
     scale_x[4] = 0.35f;
@@ -69,6 +73,8 @@ robot::robot(float size) {
     first_x[4] = -0.1f;
     first_y[4] = -1.75f;
     swing_y[4] = -0.4;
+    color[4] = glm::vec3(1.0f, 1.0f, 0.0f);
+
 
     //¿À¸¥´Ù¸®
     scale_x[5] = 0.35f;
@@ -77,6 +83,7 @@ robot::robot(float size) {
     first_x[5] = 0.1f;
     first_y[5] = -1.75f;
     swing_y[5] = -0.4;
+    color[5] = glm::vec3(1.0f, 1.0f, 0.0f);
 
     //ÄÚ
     scale_x[6] = 0.1f;
@@ -84,6 +91,7 @@ robot::robot(float size) {
     scale_z[6] = 0.3f;
     first_y[6] = -0.4f;
     first_z[6] = 0.2f;
+    color[6] = glm::vec3(0.0f, 0.0f, 0.5f);
     
     for (Model& m : body) {
         read_obj_file("cube.obj", &m);
@@ -104,7 +112,7 @@ robot::robot(float size) {
         trans[i] = glm::translate(trans[i], glm::vec3(0.0f, swing_y[i], 0.0f));
         trans[i] = glm::scale(trans[i], glm::vec3(scale_x[i], scale_y[i], scale_z[i]));
 
-        color[i] = glm::vec3(0.0f, 1.0f, 0.0f);
+        
     }
 }
 
@@ -139,4 +147,9 @@ void robot::update_position() {
         trans[i] = glm::translate(trans[i], glm::vec3(0.0f, swing_y[i], 0.0f));
         trans[i] = glm::scale(trans[i], glm::vec3(scale_x[i], scale_y[i], scale_z[i]));
     }
+}
+
+aabb robot::get_aabb(){
+    aabb temp = {x-0.1, x+0.1, y, y+1.5, z-0.1, z+0.1};
+    return temp;
 }
