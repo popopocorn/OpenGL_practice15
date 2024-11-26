@@ -96,6 +96,9 @@
     <ClCompile Include="file_open.cpp">
       <Filter>헤더 파일</Filter>
     </ClCompile>
+    <ClCompile Include="robot.cpp">
+      <Filter>헤더 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="opengl_frame.txt">
@@ -110,6 +113,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="floor.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="robot.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

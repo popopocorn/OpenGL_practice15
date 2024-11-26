@@ -10,6 +10,7 @@
 #include<vector>
 #include<random>
 #include"floor.h"
+#include"robot.h"
 //미리 선언할거
 #define vertex_shader_code "21_Vertex_shader.glsl"
 #define fragment_shader_code "21_Fragment_shader.glsl"
@@ -28,7 +29,7 @@ GLvoid timer(int);
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO[11], VBO[11], EBO[11];
+GLuint VAO, VBO, EBO;
 
 void make_vertex_shader();
 void make_fragment_shader();
@@ -89,7 +90,7 @@ float swing_speed{ 1.5f };
 
 int rotate_robot{ };
 
-float plane{ 0.11 };
+
 
 
 glm::vec3 body_color(0.0f, 0.0f, 1.0f);
@@ -103,6 +104,7 @@ glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
 
 
 
+robot robots{1.0f};
 
 my_floor floors[64];
 my_floor obs[10];
@@ -199,6 +201,7 @@ void main(int argc, char** argv) {
     read_obj_file("stage.obj", &stage);
 
     reset();
+    robots.gen_buffer();
 
     initialize_floors();
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
@@ -251,95 +254,39 @@ GLvoid drawScene(GLvoid) {
     open = glm::translate(open, glm::vec3(0.0f, -5.0f, -10.0f));
     open = glm::scale(open, glm::vec3(2.0f, 2.0f, 2.0f));
 
-
-    glm::mat4 robot[7] = {
-        glm::mat4(1.0f), glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),glm::mat4(1.0f),
-    };
-
-    for (int i = 0; i < 7; ++i) {
-        robot[i] = glm::translate(robot[i], glm::vec3(robot_x, robot_y + 2.0f, robot_z));
-        robot[i] = glm::rotate(robot[i], glm::radians(float(rotate_robot)), glm::vec3(0.0f, 1.0f, 0.0f));
-        robot[i] = glm::translate(robot[i], glm::vec3(first_x[i], first_y[i], first_z[i]));
-        robot[i] = glm::translate(robot[i], glm::vec3(0.0f, -swing_y[i], 0.0f));
-        robot[i] = glm::rotate(robot[i], glm::radians(float(swing_angle[i])), glm::vec3(1.0f, 0.0f, 0.0f));
-        robot[i] = glm::translate(robot[i], glm::vec3(0.0f, swing_y[i], 0.0f));
-        robot[i] = glm::scale(robot[i], glm::vec3(scale_x[i], scale_y[i], scale_z[i]));
-    }
-
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
     for (int i = 0; i < 11; ++i) {
-        glBindVertexArray(VAO[i]);
-
-
-        if (i < 6)
-        {
-            if (i == 0)
-                glUniform3fv(color, 1, glm::value_ptr(body_color));
-            if (i == 1)
-                glUniform3fv(color, 1, glm::value_ptr(body_color));
-            if (i == 2)
-                glUniform3fv(color, 1, glm::value_ptr(purple_color));
-            if (i == 3)
-                glUniform3fv(color, 1, glm::value_ptr(brown_color));
-            if (i == 4)
-                glUniform3fv(color, 1, glm::value_ptr(yellow_color));
-            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(robot[i]));
-            glDrawElements(GL_TRIANGLES, body[i].face_count * 3, GL_UNSIGNED_INT, 0);
-        }
-        if (i == 6)
-        {
-            glUniform3fv(color, 1, glm::value_ptr(sky_color));
-            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(robot[i]));
-            glDrawElements(GL_TRIANGLES, body[i].face_count * 3, GL_UNSIGNED_INT, 0);
+        if (i < 7) {
+            glBindVertexArray(robots.VAO[i]);
+            glUniform3fv(color, 1, glm::value_ptr(robots.color[i]));
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(robots.trans[i]));
+            glDrawElements(GL_TRIANGLES, robots.body[i].face_count * 3, GL_UNSIGNED_INT, 0);
         }
 
-        if (i == 10)
-        {
-            for (int j = 0; j < stage.face_count / 2; ++j)
-            {
-                //0 왼쪽 1 왼앞 2 오앞 3 오른쪽 4뒤 5위 6아래
-
-                if (j == 0) {
-                    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
-                    glUniform3fv(color, 1, glm::value_ptr(purple_color));
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
-                }
-
-                //if (j == 1)
-                //{
-                //    open = glm::translate(open, glm::vec3(open_x[0], 0.0f, 0.0f));
-                //    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(open));
-                //    glUniform3fv(color, 1, glm::value_ptr(sky_color));
-                //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * 1 * 6));
-                //}
-                //if (j == 2)
-                //{
-                //    open = glm::translate(open, glm::vec3(open_x[1], 0.0f, 0.0f));
-                //    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(open));
-                //    glUniform3fv(color, 1, glm::value_ptr(sky_color));
-                //    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * 2 * 6));
-                //}
-                if (j == 3) {
-                    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
-                    glUniform3fv(color, 1, glm::value_ptr(brown_color));
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
-                }
-                if (j == 4) {
-                    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
-                    glUniform3fv(color, 1, glm::value_ptr(gray_color));
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
-                }
-                if (j == 5) {
-                    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
-                    glUniform3fv(color, 1, glm::value_ptr(white_color));
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
-                }
-                /*if (j == 6) {
-                    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
-                    glUniform3fv(color, 1, glm::value_ptr(white_color));
-                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
-                }*/
-            }
+    }
+    for (int j = 0; j < stage.face_count / 2; ++j)
+    {
+        //0 왼쪽 1 왼앞 2 오앞 3 오른쪽 4뒤 5위 6아래
+        glBindVertexArray(VAO);
+        if (j == 0) {
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+            glUniform3fv(color, 1, glm::value_ptr(purple_color));
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
+        }
+        if (j == 3) {
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+            glUniform3fv(color, 1, glm::value_ptr(brown_color));
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
+        }
+        if (j == 4) {
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+            glUniform3fv(color, 1, glm::value_ptr(gray_color));
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
+        }
+        if (j == 5) {
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+            glUniform3fv(color, 1, glm::value_ptr(white_color));
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)(sizeof(float) * j * 6));
         }
     }
 
@@ -564,34 +511,18 @@ GLuint make_shader() {
 }
 
 GLvoid init_buffer() {
-    for (int i = 0; i < 7; ++i) {
-        glGenVertexArrays(1, &VAO[i]);
-        glBindVertexArray(VAO[i]);
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
 
-        glGenBuffers(1, &VBO[i]);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
-        glBufferData(GL_ARRAY_BUFFER, body[i].vertex_count * sizeof(Vertex), body[i].vertices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        glGenBuffers(1, &EBO[i]);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[i]);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, body[i].face_count * sizeof(Face), body[i].faces, GL_STATIC_DRAW);
-    }
-  
-    glGenVertexArrays(1, &VAO[10]);
-    glBindVertexArray(VAO[10]);
-
-    glGenBuffers(1, &VBO[10]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO[10]);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, stage.vertex_count * sizeof(Vertex), stage.vertices, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glGenBuffers(1, &EBO[10]);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO[10]);
+    glGenBuffers(1, &EBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, stage.face_count * sizeof(Face), stage.faces, GL_STATIC_DRAW);
 
 
@@ -603,7 +534,7 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
 GLvoid timer(int value) {
 
 
-
+    
 
     if (flag_open) {
         if (open_x[0] > -3.0f) {
@@ -741,91 +672,6 @@ void reset() {
     flag_open = 0;
     flag_walk = 0;
     flag_jump = true;
-
-    for (int i = 0; i < 7; ++i) {
-        scale_x[i] = { 1.0f };
-        scale_y[i] = { 1.0f };
-        scale_z[i] = { 1.0f };
-
-        first_x[i] = 0;
-        first_y[i] = 0;
-        first_z[i] = 0;
-        swing_y[i] = 0;
-        swing_angle[i] = 0;
-        swing_da[i] = 0;
-    }
-
-    robot_dx = 0;
-    robot_dy = 0;
-    robot_dz = 0;
-
-    robot_x = 0;
-    robot_y = 0.1;
-    robot_z = 0;
-
-    robot_speed = 0.02;
-
-    jump_speed = 0.1;
-
-
-    max_swing = 30;
-    swing_speed = 1.5f;
-
-    rotate_robot = 0;
-
-
-    //몸
-    scale_x[0] = 1.0f;
-    scale_z[0] = 1.0f;
-    scale_y[0] = 2.0f;
-    first_y[0] = -1.0f;
-
-
-    //머리
-    scale_x[1] = 0.7f;
-    scale_y[1] = 0.7f;
-    scale_z[1] = 0.7f;
-    first_y[1] = -0.4f;
-
-    //왼팔
-    scale_x[2] = 0.35f;
-    scale_z[2] = 0.35f;
-    scale_y[2] = 1.3f;
-    first_x[2] = -0.3f;
-    first_y[2] = -1.0f;
-    swing_y[2] = -0.3;
-
-    //오른팔
-    scale_x[3] = 0.35f;
-    scale_z[3] = 0.35f;
-    scale_y[3] = 1.3f;
-    first_x[3] = 0.3f;
-    first_y[3] = -1.0f;
-    swing_y[3] = -0.3;
-
-    //왼다리
-    scale_x[4] = 0.35f;
-    scale_z[4] = 0.35f;
-    scale_y[4] = 1.5f;
-    first_x[4] = -0.1f;
-    first_y[4] = -1.75f;
-    swing_y[4] = -0.4;
-
-    //오른다리
-    scale_x[5] = 0.35f;
-    scale_z[5] = 0.35f;
-    scale_y[5] = 1.5f;
-    first_x[5] = 0.1f;
-    first_y[5] = -1.75f;
-    swing_y[5] = -0.4;
-
-    //코
-    scale_x[6] = 0.1f;
-    scale_y[6] = 0.1f;
-    scale_z[6] = 0.3f;
-    first_y[6] = -0.4f;
-    first_z[6] = 0.2f;
-
 }
 
 bool collide(int idx) {
@@ -849,11 +695,11 @@ bool collide(int idx) {
 }
 
 bool collide(aabb first, aabb second) {
-    if (robot_x + 0.05 < second.x1) return false;
-    if (robot_x - 0.05 > second.x2) return false;
-    if (robot_y + 0.1 < second.y1) return false;
-    if (robot_y > second.y2) return false;
-    if (robot_z + 0.05 < second.z1) return false;
-    if (robot_z - 0.05 > second.z2) return false;
+    if (first.x2< second.x1) return false;
+    if (first.x1 > second.x2) return false;
+    if (first.y2 < second.y1) return false;
+    if (first.y1 > second.y2) return false;
+    if (first.z2 < second.z1) return false;
+    if (first.z1 > second.z2) return false;
     return true;
 }

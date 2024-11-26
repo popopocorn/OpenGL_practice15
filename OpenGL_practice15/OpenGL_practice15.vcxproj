@@ -217,6 +217,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="read_obj.cpp" />
+    <ClCompile Include="robot.cpp" />
     <ClCompile Include="temp.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -231,6 +232,7 @@
     <ClInclude Include="file_open.h" />
     <ClInclude Include="floor.h" />
     <ClInclude Include="read_obj.h" />
+    <ClInclude Include="robot.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="07_Fragment_shader.glsl" />
