@@ -26,11 +26,14 @@ void read_obj_file(const char* filename, Model* model) {
             model->vertex_count++;
         else if (line[0] == 'f' && line[1] == ' ')
             model->face_count++;
+        else if (line[0] == 'v' && line[1] == 'n' && line[2] == ' ')
+            model->vec_count++;
     }
     fseek(file, 0, SEEK_SET);
     model->vertices = (Vertex*)malloc(model->vertex_count * sizeof(Vertex));
     model->faces = (Face*)malloc(model->face_count * sizeof(Face));
-    size_t vertex_index = 0;    size_t face_index = 0;
+    model->nvectors = (Normal*)malloc(model->vec_count * sizeof(Normal));
+    size_t vertex_index = 0;    size_t face_index = 0;  size_t normal_index = 0;
     while (fgets(line, sizeof(line), file)) {
         read_newline(line);
         if (line[0] == 'v' && line[1] == ' ') {
@@ -46,7 +49,13 @@ void read_obj_file(const char* filename, Model* model) {
             model->faces[face_index].v2 = v2 - 1;
             model->faces[face_index].v3 = v3 - 1;
             face_index++;
+        }else if (line[0] == 'v' && line[1] == 'n' && line[2] == ' ') {
+            int result = sscanf_s(line + 3, "%f %f %f", &model->nvectors[vertex_index].x,
+                &model->nvectors[vertex_index].y,
+                &model->nvectors[vertex_index].z);
+            vertex_index++;
         }
     }
+
     fclose(file);
 }

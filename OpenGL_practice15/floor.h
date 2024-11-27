@@ -15,7 +15,8 @@ typedef struct my_floor
     float gravity;
     
     std::string type;
-    bool is_down;
+
+    bool is_down{true};
 
     GLuint VAO, VBO, EBO;
     glm::mat4 trans;

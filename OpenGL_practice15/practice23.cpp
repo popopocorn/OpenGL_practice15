@@ -59,6 +59,10 @@ bool flag_open;
 bool flag_walk;
 bool flag_jump;
 
+bool flag_mini;
+
+bool flag_mini_jump[3];
+
 
 glm::vec3 body_color(0.0f, 0.0f, 1.0f);
 glm::vec3 sky_color(0.0f, 0.5f, 1.0f);
@@ -72,6 +76,8 @@ glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
 
 
 robot robots{1.0f};
+
+robot minis[3] = { robot{0.5f}, robot{0.5f}, robot{0.5f}};
 
 my_floor floors[64];
 my_floor obs[14];
@@ -138,6 +144,7 @@ void initialize_floors() {
     for (int i = 3; i < 10; ++i) {
         read_obj_file("cube.obj", &obs[i].model);
         obs[i].type = "pill";
+        obs[i].gen_buffuer();
     }
     obs[3].y = 1.0f;
     obs[3].x = 2.0f;
@@ -156,6 +163,16 @@ void initialize_floors() {
     obs[9].y = 1.0f;
     obs[9].x = 5.0f;
 
+    //for (int i = 10; i < 14; ++i) {
+    //    read_obj_file("cylinder2.obj", &obs[i].model);
+    //    obs[i].type = "pill";
+    //    obs[i].color = glm::vec3(0.0f, 0.0f, 0.5f);
+    //    obs[i].y = 2.0f;
+    //    obs[i].x = 2.0f;
+    //    obs[i].z = 2.0f;
+    //    obs[i].gen_buffuer();
+
+    //}
 
 }
 
@@ -185,13 +202,14 @@ void main(int argc, char** argv) {
     glutTimerFunc(10, timer, 0);
     for (int i = 0; i < 7; ++i) {
         read_obj_file("cube.obj", &body[i]);
-
+        if(i<3)
+            minis[i].gen_buffer();
     }
     read_obj_file("stage.obj", &stage);
 
     reset();
     robots.gen_buffer();
-
+    
     initialize_floors();
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
     init_buffer();
@@ -254,6 +272,20 @@ GLvoid drawScene(GLvoid) {
         }
 
     }
+
+    if(flag_mini){
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 7; ++j) {
+                glBindVertexArray(minis[i].VAO[j]);
+                minis[i].update_position();
+                glUniform3fv(color, 1, glm::value_ptr(minis[i].color[j]));
+                glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(minis[i].trans[j]));
+                glDrawElements(GL_TRIANGLES, minis[i].body[j].face_count * 3, GL_UNSIGNED_INT, 0);
+            }
+        }
+    }
+
+
     for (int j = 0; j < stage.face_count / 2; ++j)
     {
         //0 왼쪽 1 왼앞 2 오앞 3 오른쪽 4뒤 5위 6아래
@@ -281,6 +313,7 @@ GLvoid drawScene(GLvoid) {
     }
 
     for (int i = 0; i < 64; ++i) {
+
         glBindVertexArray(floors[i].VAO);
         floors[i].update_position();
         glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(floors[i].trans));
@@ -288,11 +321,13 @@ GLvoid drawScene(GLvoid) {
         glDrawElements(GL_TRIANGLES, floors[i].model.face_count*3, GL_UNSIGNED_INT, 0);
     }
     for (int i = 0; i < 14; ++i) {
-        glBindVertexArray(obs[i].VAO);
-        obs[i].update_position();
-        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(obs[i].trans));
-        glUniform3fv(color, 1, glm::value_ptr(obs[i].color));
-        glDrawElements(GL_TRIANGLES, obs[i].model.face_count * 3, GL_UNSIGNED_INT, 0);
+        if(obs[i].y > -2.0f) {
+            glBindVertexArray(obs[i].VAO);
+            obs[i].update_position();
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(obs[i].trans));
+            glUniform3fv(color, 1, glm::value_ptr(obs[i].color));
+            glDrawElements(GL_TRIANGLES, obs[i].model.face_count * 3, GL_UNSIGNED_INT, 0);
+        }
     }
 
 
@@ -383,8 +418,8 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
             robots.robot_dy = robots.jump_speed;
         }
         break;
-    case'o':
-        flag_open = !flag_open;
+    case't':
+        flag_mini = !flag_mini;
         break;
 
     case 'z':
@@ -606,23 +641,24 @@ GLvoid timer(int value) {
         }
         if (i < 14) {
             if(obs[i].type=="obs"){
-                if (collide(robots.get_aabb(), obs[i].get_aabb()) && robots.y >= obs[i].get_aabb().y2 - 0.5) {
+                if (collide(robots.get_aabb(), obs[i].get_aabb()) && robots.y >= obs[i].get_aabb().y2 - 0.5 && robots.robot_dy<=0) {
                     obs[i].dy = -0.02f;
                 }
-                else if (not collide(robots.get_aabb(), obs[i].get_aabb())) {
+ /*               else if (not collide(robots.get_aabb(), obs[i].get_aabb())) {
                     if (obs[i].y < 0.4f)
                         obs[i].dy = 0.005f;
                     else
-                        obs[i].dy = 0;
-                }
+                      obs[i].dy = 0;
+                }*/  
             }
             if(obs[i].type=="pill"){
 
-                if (collide(robots.get_aabb(), obs[i].get_aabb()) && robots.y < obs[i].get_aabb().y2 - 0.5) {
+                if (collide(robots.get_aabb(), obs[i].get_aabb())) {
                     if(robots.x < obs[i].get_aabb().x1 || robots.x > obs[i].get_aabb().x2)
                         robots.robot_dx = 0;
                     if (robots.z < obs[i].get_aabb().z1 || robots.z > obs[i].get_aabb().z2)
                         robots.robot_dz = 0;
+                    
                 }
 
             }
@@ -645,7 +681,38 @@ GLvoid timer(int value) {
         }
 
     }
+    
 
+    for (int i = 0; i < 64; ++i) {
+        if (collide(obs[0].get_aabb(), floors[i].get_aabb()) && obs[0].y < -1.0){ 
+        
+                floors[i].color=glm::vec3(0.0f,0.0f,0.0f);
+        }
+    }
+    
+    for (int i = 0; i < 3; ++i) {
+        minis[i].mini_z = (-float(i) * 2.0f) - 1.0f;
+        minis[i].x = robots.x;
+        minis[i].y = robots.y;
+        minis[i].z = robots.z;
+        minis[i].rotate_robot = robots.rotate_robot;
+
+
+        if (flag_mini_jump[i]) {
+
+            robots.robot_dy -= 0.002;
+            if (robots.robot_dy <= 0) {
+                for (int i = 0; i < 64; ++i) {
+                    if (collide(i) && robots.y >= floors[i].get_aabb().y2 - 0.5) {
+                        robots.robot_dy = 0;
+                        flag_jump = false;
+                    }
+                }
+            }
+
+        }
+
+    }
 
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);

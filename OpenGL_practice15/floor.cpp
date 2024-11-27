@@ -45,7 +45,6 @@ void my_floor::init() {
     trans = glm::translate(trans, glm::vec3(x, y, z));
     trans = glm::scale(trans, glm::vec3(scale, scale, scale));
 
-    gen_buffuer();
 }
 void my_floor::gen_buffuer() {
     glGenVertexArrays(1, &VAO);

@@ -24,7 +24,7 @@ robot::robot(float size) {
 
     robot_speed = 0.02;
 
-    jump_speed = 0.1;
+    jump_speed = 0.2;
 
 
     max_swing = 30;
@@ -105,6 +105,7 @@ robot::robot(float size) {
         trans[i] = glm::mat4(1.0f);
         trans[i] = glm::translate(trans[i], glm::vec3(x, y + 2.0f, z));
         trans[i] = glm::rotate(trans[i], glm::radians(float(rotate_robot)), glm::vec3(0.0f, 1.0f, 0.0f));
+        trans[i] = glm::translate(trans[i], glm::vec3(mini_x, mini_y + 2.0f, mini_z));
         trans[i] = glm::scale(trans[i], glm::vec3(scale, scale, scale));
         trans[i] = glm::translate(trans[i], glm::vec3(first_x[i], first_y[i], first_z[i]));
         trans[i] = glm::translate(trans[i], glm::vec3(0.0f, -swing_y[i], 0.0f));
@@ -141,6 +142,7 @@ void robot::update_position() {
         trans[i] = glm::translate(trans[i], glm::vec3(x, y + 2.0f, z));
         trans[i] = glm::rotate(trans[i], glm::radians(float(rotate_robot)), glm::vec3(0.0f, 1.0f, 0.0f));
         trans[i] = glm::scale(trans[i], glm::vec3(scale, scale, scale));
+        trans[i] = glm::translate(trans[i], glm::vec3(0, mini_y, mini_z));
         trans[i] = glm::translate(trans[i], glm::vec3(first_x[i], first_y[i], first_z[i]));
         trans[i] = glm::translate(trans[i], glm::vec3(0.0f, -swing_y[i], 0.0f));
         trans[i] = glm::rotate(trans[i], glm::radians(float(swing_angle[i])), glm::vec3(1.0f, 0.0f, 0.0f));

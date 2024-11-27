@@ -7,6 +7,10 @@ struct robot {
     float z;
     float scale;
 
+    float mini_x;
+    float mini_y;
+    float mini_z;
+
     float scale_x[7];
     float scale_y[7];
     float scale_z[7];
