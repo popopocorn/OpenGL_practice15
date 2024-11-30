@@ -8,6 +8,7 @@ struct shape {
 
     float scale{1.0f};
 
+
     float angle_x{};
     float angle_y{};
     float angle_z{};

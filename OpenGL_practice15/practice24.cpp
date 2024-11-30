@@ -50,6 +50,7 @@ float camera_y;
 float camera_z;
 
 glm::vec3 light(0.0f, 0.0f, 5.0f);
+float radius{5.0f};
 
 bool flag_cube_look;
 bool flag_pyramid_look;
@@ -124,7 +125,7 @@ GLvoid drawScene(GLvoid) {
 
 
 
-
+    glm::mat4 temp(1.0f);
 
     glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
     GLuint projection = glGetUniformLocation(shader_program, "projection");
@@ -142,6 +143,7 @@ GLvoid drawScene(GLvoid) {
 
     view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z - 15.0f));
     view = glm::rotate(view, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::rotate(view, glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
     glUniformMatrix4fv(view_mat, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -164,6 +166,7 @@ GLvoid drawScene(GLvoid) {
     l.x = light.x;
     l.y = light.y;
     l.z = light.z + 0.25;
+
     l.update_position();
     glUniform3fv(color, 1, glm::value_ptr(l.color));
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(l.trans));
@@ -186,7 +189,29 @@ GLvoid drawScene(GLvoid) {
         glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(p.trans));
         glDrawArrays(GL_TRIANGLES, 0, p.model.vertices.size());
     }
-    
+
+
+
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(temp));
+    glUniform3fv(color, 1, glm::value_ptr(l.color));
+    float rad = radius;
+    glPointSize(5.0f);
+    glBegin(GL_LINE_LOOP);
+    glColor3f(1.0f, 1.0f, 1.0f);
+
+
+    for (int i = 0; i < 360; ++i) {
+        float rx = rad * cos(glm::radians(float(i)));
+        float rz = rad * sin(glm::radians(float(i)));
+        float ry = 0;
+        glVertex3f(rx, ry, rz);
+    }
+    glEnd();
+    glFinish();
+
+
+
+
     glutSwapBuffers();
 
 }
@@ -200,15 +225,17 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case'z':
         light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.1f)) * glm::vec4(light, 1.0f));
+        radius += 0.1f;
         break;
 
     case'Z':
         light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.1f)) * glm::vec4(light, 1.0f));
+        radius -= 0.1f;
         break;
     case'r':
      
         light = glm::vec3(glm::rotate(glm::mat4(1.0f),glm::radians(3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
-
+        l.angle_y += 3.0f;
         break;
     case'm':
         light_on = !light_on;
