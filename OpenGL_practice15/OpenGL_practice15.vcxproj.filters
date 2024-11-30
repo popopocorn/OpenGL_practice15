@@ -99,6 +99,12 @@
     <ClCompile Include="robot.cpp">
       <Filter>헤더 파일</Filter>
     </ClCompile>
+    <ClCompile Include="practice24.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="shape.cpp">
+      <Filter>헤더 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="opengl_frame.txt">
@@ -119,6 +125,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="aabb.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="shape.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -183,6 +192,12 @@
     <None Include="middle_Fragment_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="24_Vertex_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="24_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Object Include="cube.obj">
@@ -204,6 +219,15 @@
       <Filter>리소스 파일</Filter>
     </Object>
     <Object Include="stage.obj">
+      <Filter>리소스 파일</Filter>
+    </Object>
+    <Object Include="cone2.obj">
+      <Filter>리소스 파일</Filter>
+    </Object>
+    <Object Include="cube1.obj">
+      <Filter>리소스 파일</Filter>
+    </Object>
+    <Object Include="pyramid2.obj">
       <Filter>리소스 파일</Filter>
     </Object>
   </ItemGroup>

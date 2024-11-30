@@ -1,61 +1,62 @@
 #pragma once
-#include<stdio.h>
-#include<stdlib.h>
-#include<string.h>
+#include<iostream>
+#include<fstream>
+
 #define MAX_LINE_LENGTH 128
 #include"read_obj.h"
-void read_newline(char* str) {
-    char* pos;
-    if ((pos = strchr(str, '\n')) != NULL)
-        *pos = '\0';
-}
+
 void read_obj_file(const char* filename, Model* model) {
-    FILE* file;
-    fopen_s(&file, filename, "r");
-    if (!file) {
-        perror("Error opening file");
-        exit(EXIT_FAILURE);
+    std::ifstream in{ filename };
+    if (not in) {
+        std::cout << "파일 읽기 실패\n";
     }
-    char line[MAX_LINE_LENGTH];
-    model->vertex_count = 0;
-    model->face_count = 0;
 
-    while (fgets(line, sizeof(line), file)) {
-        read_newline(line);
-        if (line[0] == 'v' && line[1] == ' ')
-            model->vertex_count++;
-        else if (line[0] == 'f' && line[1] == ' ')
-            model->face_count++;
-        else if (line[0] == 'v' && line[1] == 'n' && line[2] == ' ')
-            model->vec_count++;
-    }
-    fseek(file, 0, SEEK_SET);
-    model->vertices = (Vertex*)malloc(model->vertex_count * sizeof(Vertex));
-    model->faces = (Face*)malloc(model->face_count * sizeof(Face));
-    model->nvectors = (Normal*)malloc(model->vec_count * sizeof(Normal));
-    size_t vertex_index = 0;    size_t face_index = 0;  size_t normal_index = 0;
-    while (fgets(line, sizeof(line), file)) {
-        read_newline(line);
-        if (line[0] == 'v' && line[1] == ' ') {
-            int result = sscanf_s(line + 2, "%f %f %f", &model->vertices[vertex_index].x,
-                &model->vertices[vertex_index].y,
-                &model->vertices[vertex_index].z);
-            vertex_index++;
-        }
-        else if (line[0] == 'f' && line[1] == ' ') {
-            unsigned int v1, v2, v3;
-            int result = sscanf_s(line + 2, "%u %u %u", &v1, &v2, &v3);
-            model->faces[face_index].v1 = v1 - 1; // OBJ indices start at 1
-            model->faces[face_index].v2 = v2 - 1;
-            model->faces[face_index].v3 = v3 - 1;
-            face_index++;
-        }else if (line[0] == 'v' && line[1] == 'n' && line[2] == ' ') {
-            int result = sscanf_s(line + 3, "%f %f %f", &model->nvectors[vertex_index].x,
-                &model->nvectors[vertex_index].y,
-                &model->nvectors[vertex_index].z);
-            vertex_index++;
+    std::vector<Vertex> temp_vertex;
+    std::vector<Normal> temp_norm;
+    std::vector<Face> temp_vdx; // 정점 인덱스
+    std::vector<Face> temp_ndx; // 노멀 인덱스
+
+    while (in) {
+        std::string line;
+        in >> line;
+        if (line == "v") {
+            Vertex v;
+            in >> v.x >> v.y >> v.z;
+            temp_vertex.push_back(v);
+        }else if (line == "vn") {
+            Normal n;
+            in >> n.x >> n.y >> n.z;
+            temp_norm.push_back(n);
+        }else if (line == "f") {
+            char a;
+            Face n;
+            Face v;
+            //Face t;
+            Face vertexIndex, uvIndex, normalIndex;
+
+            for (int i = 0; i < 3; i++)
+            {
+                in >> vertexIndex.v[i] >> a >> uvIndex.v[i] >> a >> normalIndex.v[i];
+                --vertexIndex.v[i];
+                --uvIndex.v[i];
+                --normalIndex.v[i];
+            }
+            temp_vdx.push_back(vertexIndex);
+            temp_ndx.push_back(normalIndex);
+
         }
     }
 
-    fclose(file);
+    for (int i = 0; i < temp_vdx.size(); ++i) {
+        model->vertices.push_back(temp_vertex[temp_vdx[i].v[0]]);
+        model->vertices.push_back(temp_vertex[temp_vdx[i].v[1]]);
+        model->vertices.push_back(temp_vertex[temp_vdx[i].v[2]]);
+    }
+    for (int i = 0; i < temp_ndx.size(); ++i) {
+        model->nvectors.push_back(temp_norm[temp_ndx[i].v[0]]);
+        model->nvectors.push_back(temp_norm[temp_ndx[i].v[1]]);
+        model->nvectors.push_back(temp_norm[temp_ndx[i].v[2]]);
+    }
+
+    
 }
