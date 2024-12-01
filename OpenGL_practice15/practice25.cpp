@@ -49,8 +49,8 @@ float camera_x;
 float camera_y;
 float camera_z;
 
-glm::vec3 light(0.0f, 0.0f, 5.0f);
-float radius{ 5.0f };
+glm::vec3 light(0.0f, 0.0f, 7.0f);
+float radius{ 0.0f };
 
 
 
@@ -64,13 +64,13 @@ glm::vec3 gray_color(0.5f, 0.5f, 0.5f);
 glm::vec3 white_color(1.0f, 1.0f, 1.0f);
 glm::vec3 red_color(1.0f, 0.0f, 0.0f);
 glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
+glm::vec3 light_color(1.0f, 1.0f, 1.0f);
 
 
 
-
-shape s{ 0.0f, 0.0f, 0.0f, "cube1.obj", red_color };
-shape l{ 0.0f, 0.0f, 0.0f, "cube1.obj", gray_color };
-shape p{ 0.0f, 0.0f, 0.0f, "pyramid2.obj", red_color };
+shape mother{ 0.0f, 0.0f, 0.0f, "sphere2.obj", red_color };
+shape child1{ -3.0f, 0.0f, 0.0f, "sphere2.obj", gray_color };
+shape child2{ -5.0f, 0.0f, 0.0f, "sphere2.obj", sky_color };
 //------------------------------------------------------
 //필요한 함수 선언
 std::random_device(rd);
@@ -97,10 +97,9 @@ void main(int argc, char** argv) {
     glutSpecialFunc(SpecialKeyboard);
     glutTimerFunc(10, timer, 0);
 
-
-    s.gen_buffer();
-    p.gen_buffer();
-    l.gen_buffer();
+    mother.gen_buffer();
+    child2.gen_buffer();
+    child1.gen_buffer();
 
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
     init_buffer();
@@ -141,8 +140,8 @@ GLvoid drawScene(GLvoid) {
 
 
     view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z - 15.0f));
-    view = glm::rotate(view, glm::radians(30.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    view = glm::rotate(view, glm::radians(30.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    view = glm::rotate(view, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    view = glm::rotate(view, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
     glUniformMatrix4fv(view_mat, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -151,7 +150,7 @@ GLvoid drawScene(GLvoid) {
     glUniform3f(lighPosLocaiont, light.x, light.y, light.z);
 
     unsigned int lightColorLocation = glGetUniformLocation(shader_program, "lightColor");
-    glUniform3f(lightColorLocation, 1.0, 1.0, 1.0);
+    glUniform3f(lightColorLocation, light_color.x, light_color.y, light_color.z);
 
     unsigned int viewPosLocation = glGetUniformLocation(shader_program, "viewPos");
     glUniform3f(viewPosLocation, camera_pos.x, camera_pos.y, camera_pos.z);
@@ -161,15 +160,31 @@ GLvoid drawScene(GLvoid) {
     GLuint color = glGetUniformLocation(shader_program, "color");
     GLuint light_switch = glGetUniformLocation(shader_program, "light_on");
     glUniform1i(light_switch, light_on);
-    glBindVertexArray(l.VAO);
-    l.x = light.x;
-    l.y = light.y;
-    l.z = light.z + 0.25;
+    /*glBindVertexArray(shape.VAO);
+    shape.update_position();
+    glUniform3fv(color, 1, glm::value_ptr(shape.color));
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(shape.trans));
+    glDrawArrays(GL_TRIANGLES, 0, shape.model.vertices.size());*/
 
-    l.update_position();
-    glUniform3fv(color, 1, glm::value_ptr(l.color));
-    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(l.trans));
-    glDrawArrays(GL_TRIANGLES, 0, l.model.vertices.size());
+    glBindVertexArray(mother.VAO);
+    mother.update_position();
+    glUniform3fv(color, 1, glm::value_ptr(mother.color));
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(mother.trans));
+    glDrawArrays(GL_TRIANGLES, 0, mother.model.vertices.size());
+
+    glBindVertexArray(child1.VAO);
+    child1.scale = 0.5f;
+    child1.update_position();
+    glUniform3fv(color, 1, glm::value_ptr(child1.color));
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(child1.trans));
+    glDrawArrays(GL_TRIANGLES, 0, child1.model.vertices.size());
+
+    glBindVertexArray(child2.VAO);
+    child2.scale = 0.3f;
+    child2.update_position();
+    glUniform3fv(color, 1, glm::value_ptr(child2.color));
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(child2.trans));
+    glDrawArrays(GL_TRIANGLES, 0, child2.model.vertices.size());
 
     glutSwapBuffers();
 
@@ -182,13 +197,48 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
+    case'z':
+        light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.1f)) * glm::vec4(light, 1.0f));
+        radius += 0.1f;
+        break;
 
+    case'Z':
+        light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.1f)) * glm::vec4(light, 1.0f));
+        radius -= 0.1f;
+        break;
+
+    case'r':
+
+        light = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
+        
+        break;
+
+    case'R':
+
+        light = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(-3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
+        
+        break;
+
+    case 'x':
+        light_color = white_color;
+
+        break;
+
+    case 'c':
+        light_color = yellow_color;
+
+        break;
+
+    case 'v':
+        light_color = sky_color;
+
+        break;
     case 'q':
         glutLeaveMainLoop();
         break;
 
         break;
-    }
+    }   
 
 
 
