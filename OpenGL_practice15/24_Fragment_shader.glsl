@@ -1,4 +1,4 @@
-﻿#version 330 core
+#version 330 core
 
 in vec3 FragPos; // 프래그먼트 위치 (월드 좌표계)
 in vec3 Normal;  // 법선 벡터
