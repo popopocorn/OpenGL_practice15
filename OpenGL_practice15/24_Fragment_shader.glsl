@@ -24,7 +24,7 @@ void main()
     vec3 diffuse = diffuseStrength * lightColor;
 
     // Specular (반사광)
-    int shininess = 128;
+    int shininess = 64;
     vec3 viewDir = normalize(viewPos - FragPos); // 뷰 방향
     vec3 reflectDir = reflect(-lightDir, norm); // 반사 벡터
     float spec = max(dot(viewDir, reflectDir), 0.0);
@@ -33,7 +33,7 @@ void main()
 
     // 최종 색상 계산
     if(light_on){
-        vec3 result = (ambient + diffuse + specular) * objectColor;
+        vec3 result = (ambient + diffuse) * objectColor;
         FragColor = vec4(result, 1.0);
     }else{
         vec3 result = (ambient) * objectColor;

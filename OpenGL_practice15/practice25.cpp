@@ -133,15 +133,15 @@ GLvoid drawScene(GLvoid) {
 
     glm::mat4 view(1.0f);
 
-    glm::vec3 camera_pos(0.0f, 0.0f, 0.0f);
-    glm::vec3 camera_target(camera_pos.x, camera_pos.y, camera_pos.z - 1.0);
+    glm::vec3 camera_pos(0.0f, 0.0f, 15.0f);
+    glm::vec3 camera_target(0.0f, 0.0f, - 1.0f);
     glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
     view = glm::lookAt(camera_pos, camera_target, camera_up);
 
 
-    view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z - 15.0f));
-    view = glm::rotate(view, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    view = glm::rotate(view, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    //view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z - 5.0f));
+    //view = glm::rotate(view, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    //view = glm::rotate(view, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
     glUniformMatrix4fv(view_mat, 1, GL_FALSE, glm::value_ptr(view));
 
