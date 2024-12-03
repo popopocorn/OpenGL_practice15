@@ -128,6 +128,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="crane.cpp" />
     <ClCompile Include="file_open.cpp" />
     <ClCompile Include="first_practice.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -192,6 +193,9 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="practice25.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="practice26.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="practice4.cpp">
@@ -243,6 +247,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="aabb.h" />
+    <ClInclude Include="crane.h" />
     <ClInclude Include="file_open.h" />
     <ClInclude Include="floor.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -275,6 +280,8 @@
     <None Include="24_Fragment_shader.glsl" />
     <None Include="24_Vertex_shader.glsl" />
     <None Include="25_Fragment_shader.glsl" />
+    <None Include="26_Fragment_shader.glsl" />
+    <None Include="26_Vertex_shader.glsl" />
     <None Include="middle_Fragment_shader.glsl" />
     <None Include="middle_Vertex_shader.glsl" />
   </ItemGroup>

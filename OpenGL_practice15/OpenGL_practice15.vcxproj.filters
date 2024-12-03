@@ -108,6 +108,12 @@
     <ClCompile Include="practice25.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="practice26.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="crane.cpp">
+      <Filter>헤더 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="opengl_frame.txt">
@@ -131,6 +137,9 @@
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="shape.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="crane.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>
@@ -202,6 +211,12 @@
       <Filter>리소스 파일</Filter>
     </None>
     <None Include="25_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="26_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
+    <None Include="26_Vertex_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
   </ItemGroup>

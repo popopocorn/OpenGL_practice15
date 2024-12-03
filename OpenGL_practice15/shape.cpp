@@ -17,7 +17,7 @@ shape::shape(float in_x, float in_y, float in_z, const char * obj_name, glm::vec
     trans = glm::rotate(trans, glm::radians(angle_x), glm::vec3(1.0f, 0.0f, 0.0f));
     trans = glm::rotate(trans, glm::radians(angle_y), glm::vec3(0.0f, 1.0f, 0.0f));
     trans = glm::rotate(trans, glm::radians(angle_z), glm::vec3(0.0f, 0.0f, 1.0f));
-    trans = glm::scale(trans, glm::vec3(scale, scale, scale));
+    trans = glm::scale(trans, glm::vec3(scale_x, scale_y, scale_z));
     read_obj_file(obj_name, &model);
     color = c;
 
@@ -29,7 +29,7 @@ void shape::update_position() {
     trans = glm::rotate(trans, glm::radians(angle_x), glm::vec3(1.0f, 0.0f, 0.0f));
     trans = glm::rotate(trans, glm::radians(angle_y), glm::vec3(0.0f, 1.0f, 0.0f));
     trans = glm::rotate(trans, glm::radians(angle_z), glm::vec3(0.0f, 0.0f, 1.0f));
-    trans = glm::scale(trans, glm::vec3(scale, scale, scale));
+    trans = glm::scale(trans, glm::vec3(scale_x, scale_y, scale_z));
 }
 
 void shape::gen_buffer() {

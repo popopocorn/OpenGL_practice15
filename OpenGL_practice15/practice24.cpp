@@ -38,6 +38,8 @@ GLuint make_shader();
 GLvoid init_buffer();
 //------------------------------------------------------
 //전역변수
+
+
 GLclampf base_r = 0.0f;
 GLclampf base_g = 0.0f;
 GLclampf base_b = 0.0f;
@@ -174,7 +176,9 @@ GLvoid drawScene(GLvoid) {
 
     if(flag_cube_look){
         glBindVertexArray(s.VAO);
-        s.scale = 2.0f;
+        s.scale_x = 2.0f;
+        s.scale_y = 2.0f;
+        s.scale_z = 2.0f;
         s.update_position();
         glUniform3fv(color, 1, glm::value_ptr(s.color));
         glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(s.trans));
@@ -183,7 +187,9 @@ GLvoid drawScene(GLvoid) {
 
     if(flag_pyramid_look){
         glBindVertexArray(p.VAO);
-        p.scale = 2.0f;        
+        p.scale_x = 2.0f;        
+        p.scale_y = 2.0f;
+        p.scale_z = 2.0f;
         p.update_position();
         glUniform3fv(color, 1, glm::value_ptr(p.color));
         glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(p.trans));

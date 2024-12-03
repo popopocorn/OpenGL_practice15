@@ -10,11 +10,11 @@
 #include<vector>
 #include<random>
 #include"shape.h"
-#include"robot.h"
-#include"aabb.h"
+#include"crane.h"
+
 //미리 선언할거
-#define vertex_shader_code "24_Vertex_shader.glsl"
-#define fragment_shader_code "25_Fragment_shader.glsl"
+#define vertex_shader_code "26_Vertex_shader.glsl"
+#define fragment_shader_code "26_Fragment_shader.glsl"
 
 //------------------------------------------------------
 //콜백함수
@@ -43,37 +43,27 @@ GLclampf base_g = 0.0f;
 GLclampf base_b = 0.0f;
 GLint width{ 800 }, height{ 600 };
 
-float angle{};
 
-float camera_x;
-float camera_y;
-float camera_z;
-
-glm::vec3 light(0.0f, 0.0f, 15.0f);
-float radius{ 0.0f };
-
-
-
+glm::vec3 light(0.0f, 0.0f, 3.0);
 bool light_on{ true };
-
-glm::vec3 body_color(0.0f, 0.0f, 1.0f);
-glm::vec3 sky_color(0.0f, 0.5f, 1.0f);
-glm::vec3 purple_color(1.0f, 0.0f, 1.0f);
-glm::vec3 brown_color(0.5f, 0.3f, 0.0f);
-glm::vec3 gray_color(0.5f, 0.5f, 0.5f);
-glm::vec3 white_color(1.0f, 1.0f, 1.0f);
-glm::vec3 red_color(1.0f, 0.0f, 0.0f);
-glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
 glm::vec3 lc(0.7f, 0.7f, 0.7f);
 glm::vec3 light_color(0.7f, 0.7f, 0.7f);
 
-glm::vec3 camera_pos(0.0f, 0.0f, 15.0f);
+glm::vec3 camera_pos(0.0f, 0.0f, 0.0f);
+glm::vec3 after_pos(0.0f, 0.0f, 0.0f);
+
 glm::vec3 camera_target(camera_pos.x, camera_pos.y, -1.0f);
 
-shape mother{ 0.0f, 0.0f, 0.0f, "sphere2.obj", white_color };
-shape child1{ -3.0f, 0.0f, 0.0f, "sphere2.obj", gray_color };
-shape child2{ -5.0f, 0.0f, 0.0f, "sphere2.obj", sky_color };
-shape l{ 0.0f, 0.0f, 0.0f, "cube1.obj", gray_color };
+shape lo{ light.x, light.y + 0.2f, light.z, "sphere2.obj", white_color };
+shape plane{0.0f, 0.0f, 0.0f, "cube1.obj", brown_color};
+crane cr{0.2f};
+
+float cx;
+float cy;
+float cz;
+
+float angle;
+
 //------------------------------------------------------
 //필요한 함수 선언
 std::random_device(rd);
@@ -99,14 +89,9 @@ void main(int argc, char** argv) {
     glutKeyboardFunc(Keyboard);
     glutSpecialFunc(SpecialKeyboard);
     glutTimerFunc(10, timer, 0);
-
-    mother.gen_buffer();
-    child2.gen_buffer();
-    child1.gen_buffer();
-    l.gen_buffer();
-    
-    
-    
+    lo.gen_buffer();
+    plane.gen_buffer();
+    cr.gen_buffer();
 
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
     init_buffer();
@@ -135,18 +120,24 @@ GLvoid drawScene(GLvoid) {
     glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
     GLuint projection = glGetUniformLocation(shader_program, "projection");
 
-    
+
 
     glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj2));
 
 
     glm::mat4 view(1.0f);
 
-    
+    glm::mat4 camera_trans(1.0f);
 
     glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
     view = glm::lookAt(camera_pos, camera_target, camera_up);
+    camera_trans = glm::translate(camera_trans, glm::vec3(cx, cy, cz - 10.0f));
+    camera_trans = glm::rotate(camera_trans, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
+    view *= camera_trans;
 
+    after_pos = glm::vec3(
+        camera_trans * glm::vec4(camera_pos, 1.0f)
+    );
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
     glUniformMatrix4fv(view_mat, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -158,10 +149,11 @@ GLvoid drawScene(GLvoid) {
     glUniform3f(lightColorLocation, light_color.x, light_color.y, light_color.z);
 
     unsigned int viewPosLocation = glGetUniformLocation(shader_program, "viewPos");
-    glUniform3f(viewPosLocation, camera_pos.x, camera_pos.y, camera_pos.z);
+    glUniform3f(viewPosLocation, after_pos.x, after_pos.y, after_pos.z);
 
 
     GLuint trans_mat = glGetUniformLocation(shader_program, "model");
+    GLuint trans_mat2 = glGetUniformLocation(shader_program, "model2");
     GLuint color = glGetUniformLocation(shader_program, "color");
     GLuint light_switch = glGetUniformLocation(shader_program, "light_on");
     glUniform1i(light_switch, light_on);
@@ -170,32 +162,35 @@ GLvoid drawScene(GLvoid) {
     glUniform3fv(color, 1, glm::value_ptr(shape.color));
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(shape.trans));
     glDrawArrays(GL_TRIANGLES, 0, shape.model.vertices.size());*/
+    glUniformMatrix4fv(trans_mat2, 1, GL_FALSE, glm::value_ptr(temp));
+    glBindVertexArray(lo.VAO);
+    lo.scale_x = 0.1f;
+    lo.scale_y = 0.1f;
+    lo.scale_z = 0.1f;
+    lo.update_position();
+    glUniform3fv(color, 1, glm::value_ptr(lo.color));
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(lo.trans));
+    glDrawArrays(GL_TRIANGLES, 0, lo.model.vertices.size());
 
-    glBindVertexArray(mother.VAO);
-    mother.update_position();
-    glUniform3fv(color, 1, glm::value_ptr(mother.color));
-    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(mother.trans));
-    glDrawArrays(GL_TRIANGLES, 0, mother.model.vertices.size());
+    glBindVertexArray(plane.VAO);
+    plane.y = -2.3f;
+    plane.scale_x = 10.0f;
+    plane.scale_y = 0.2;
+    plane.scale_z = 10.0f;
+    plane.update_position();
+    glUniform3fv(color, 1, glm::value_ptr(plane.color));
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(plane.trans));
+    glDrawArrays(GL_TRIANGLES, 0, plane.model.vertices.size());
 
-
-
-    glBindVertexArray(child1.VAO);
-    child1.scale_x = 0.5f;
-    child1.scale_y = 0.5f;
-    child1.scale_z = 0.5f;
-    child1.update_position();
-    glUniform3fv(color, 1, glm::value_ptr(child1.color));
-    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(child1.trans));
-    glDrawArrays(GL_TRIANGLES, 0, child1.model.vertices.size());
-
-    glBindVertexArray(child2.VAO);
-    child2.scale_x = 0.3f;
-    child2.scale_y = 0.3f;
-    child2.scale_z = 0.3f;
-    child2.update_position();
-    glUniform3fv(color, 1, glm::value_ptr(child2.color));
-    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(child2.trans));
-    glDrawArrays(GL_TRIANGLES, 0, child2.model.vertices.size());
+    for (shape& s : cr.c) {
+        glBindVertexArray(s.VAO);
+        s.update_position();
+        cr.update_position();
+        glUniform3fv(color, 1, glm::value_ptr(s.color));
+        glUniformMatrix4fv(trans_mat2, 1, GL_FALSE, glm::value_ptr(cr.trans));
+        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(s.trans));
+        glDrawArrays(GL_TRIANGLES, 0, s.model.vertices.size());
+    }
 
     glutSwapBuffers();
 
@@ -208,42 +203,51 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
-    case'z':
-        light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.5f)) * glm::vec4(light, 1.0f));
-        //camera_pos.x += 0.5;
-        //mother.x += 0.1f;
+    case 'z':
+        cz += 0.1f;
         break;
-
-    case'Z':
-        light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.5f)) * glm::vec4(light, 1.0f));
-        
-        //camera_pos.x -= 0.5;
-        //mother.x -= 0.1f;
+    case 'Z':
+        cz -= 0.1f;
         break;
-
-    case'r':
+    case 'x':
+        cx += 0.1f;
+        break;
+    case 'X':
+        cx -= 0.1f;
+        break;
+    case'y':
 
         light = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
-        
+
         break;
 
-    case'R':
+    case'Y':
 
         light = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(-3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
-        
+
         break;
 
-    case 'x':
+    case 'r':
+        angle += 1.0f;
+
+        break;
+    case 'R':
+        angle -= 1.0f;
+        break;
+    case 'm':
+        light_on = !light_on;
+        break;
+    case 'c':
         light_color = brown_color;
 
         break;
 
-    case 'c':
+    case 'v':
         light_color = lc;
 
         break;
 
-    case 'v':
+    case 'b':
         light_color = sky_color;
 
         break;
@@ -252,7 +256,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         break;
 
         break;
-    }   
+    }
 
 
 
@@ -340,9 +344,22 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
 
     glutPostRedisplay();
 }
+float dx{ 0.1f};
+
 GLvoid timer(int value) {
     camera_target = glm::vec3(camera_pos.x, camera_pos.y, -1.0f);
+    lo.x = light.x;
+    lo.y = light.y;
+    lo.z = light.z;
+    cr.x += dx;
+    if (cr.x > 3) {
+        dx = -0.05f;
+    }
+    if (cr.x < -3) {
+        dx = 0.05f;
+    }
+
+    
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);
 }
-
