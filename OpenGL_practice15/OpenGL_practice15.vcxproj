@@ -274,6 +274,7 @@
     <None Include="21_Vertex_shader.glsl" />
     <None Include="24_Fragment_shader.glsl" />
     <None Include="24_Vertex_shader.glsl" />
+    <None Include="25_Fragment_shader.glsl" />
     <None Include="middle_Fragment_shader.glsl" />
     <None Include="middle_Vertex_shader.glsl" />
   </ItemGroup>

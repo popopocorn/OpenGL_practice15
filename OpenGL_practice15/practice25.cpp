@@ -14,7 +14,7 @@
 #include"aabb.h"
 //미리 선언할거
 #define vertex_shader_code "24_Vertex_shader.glsl"
-#define fragment_shader_code "24_Fragment_shader.glsl"
+#define fragment_shader_code "25_Fragment_shader.glsl"
 
 //------------------------------------------------------
 //콜백함수
@@ -49,7 +49,7 @@ float camera_x;
 float camera_y;
 float camera_z;
 
-glm::vec3 light(0.0f, 0.0f, 7.0f);
+glm::vec3 light(0.0f, 0.0f, 15.0f);
 float radius{ 0.0f };
 
 
@@ -64,13 +64,16 @@ glm::vec3 gray_color(0.5f, 0.5f, 0.5f);
 glm::vec3 white_color(1.0f, 1.0f, 1.0f);
 glm::vec3 red_color(1.0f, 0.0f, 0.0f);
 glm::vec3 yellow_color(1.0f, 1.0f, 0.0f);
-glm::vec3 light_color(1.0f, 1.0f, 1.0f);
+glm::vec3 lc(0.7f, 0.7f, 0.7f);
+glm::vec3 light_color(0.7f, 0.7f, 0.7f);
 
+glm::vec3 camera_pos(0.0f, 0.0f, 15.0f);
+glm::vec3 camera_target(camera_pos.x, camera_pos.y, -1.0f);
 
-
-shape mother{ 0.0f, 0.0f, 0.0f, "sphere2.obj", red_color };
+shape mother{ 0.0f, 0.0f, 0.0f, "sphere2.obj", white_color };
 shape child1{ -3.0f, 0.0f, 0.0f, "sphere2.obj", gray_color };
 shape child2{ -5.0f, 0.0f, 0.0f, "sphere2.obj", sky_color };
+shape l{ 0.0f, 0.0f, 0.0f, "cube1.obj", gray_color };
 //------------------------------------------------------
 //필요한 함수 선언
 std::random_device(rd);
@@ -100,6 +103,10 @@ void main(int argc, char** argv) {
     mother.gen_buffer();
     child2.gen_buffer();
     child1.gen_buffer();
+    l.gen_buffer();
+    
+    
+    
 
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
     init_buffer();
@@ -128,20 +135,18 @@ GLvoid drawScene(GLvoid) {
     glm::mat4 proj2 = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 50.0f);
     GLuint projection = glGetUniformLocation(shader_program, "projection");
 
+    
+
     glUniformMatrix4fv(projection, 1, GL_FALSE, glm::value_ptr(proj2));
 
 
     glm::mat4 view(1.0f);
 
-    glm::vec3 camera_pos(0.0f, 0.0f, 15.0f);
-    glm::vec3 camera_target(0.0f, 0.0f, - 1.0f);
+    
+
     glm::vec3 camera_up(0.0f, 1.0f, 0.0f);
     view = glm::lookAt(camera_pos, camera_target, camera_up);
 
-
-    //view = glm::translate(view, glm::vec3(camera_x, camera_y, camera_z - 5.0f));
-    //view = glm::rotate(view, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-    //view = glm::rotate(view, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
     glUniformMatrix4fv(view_mat, 1, GL_FALSE, glm::value_ptr(view));
 
@@ -172,6 +177,8 @@ GLvoid drawScene(GLvoid) {
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(mother.trans));
     glDrawArrays(GL_TRIANGLES, 0, mother.model.vertices.size());
 
+
+
     glBindVertexArray(child1.VAO);
     child1.scale = 0.5f;
     child1.update_position();
@@ -198,13 +205,16 @@ GLvoid Reshape(int w, int h) {
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case'z':
-        light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.1f)) * glm::vec4(light, 1.0f));
-        radius += 0.1f;
+        //light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.0f, 0.0f)) * glm::vec4(light, 1.0f));
+        //camera_pos.x += 0.5;
+        mother.x += 0.1f;
         break;
 
     case'Z':
-        light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -0.1f)) * glm::vec4(light, 1.0f));
-        radius -= 0.1f;
+        //light = glm::vec3(glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, 0.0f, -0.0f)) * glm::vec4(light, 1.0f));
+        
+        //camera_pos.x -= 0.5;
+        mother.x -= 0.1f;
         break;
 
     case'r':
@@ -220,12 +230,12 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         break;
 
     case 'x':
-        light_color = white_color;
+        light_color = brown_color;
 
         break;
 
     case 'c':
-        light_color = yellow_color;
+        light_color = lc;
 
         break;
 
@@ -327,7 +337,7 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
     glutPostRedisplay();
 }
 GLvoid timer(int value) {
-
+    camera_target = glm::vec3(camera_pos.x, camera_pos.y, -1.0f);
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);
 }

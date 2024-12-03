@@ -201,6 +201,9 @@
     <None Include="24_Fragment_shader.glsl">
       <Filter>리소스 파일</Filter>
     </None>
+    <None Include="25_Fragment_shader.glsl">
+      <Filter>리소스 파일</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Object Include="cube.obj">

@@ -20,7 +20,7 @@ struct shape {
     glm::mat4 trans;
     GLuint VAO, VBO, NBO;
 
-
+    shape() = default;
     shape(float, float, float, const char *, glm::vec3);
 
     void update_position();
