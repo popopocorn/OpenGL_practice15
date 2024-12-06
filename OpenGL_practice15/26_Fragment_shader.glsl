@@ -33,7 +33,7 @@ void main()
 
     // 최종 색상 계산
     if(light_on){
-        vec3 result = (ambient + diffuse + specular) * objectColor;
+        vec3 result = (ambient + diffuse) * objectColor;
         FragColor = vec4(result, 1.0);
     }else{
         vec3 result = (ambient) * objectColor;
