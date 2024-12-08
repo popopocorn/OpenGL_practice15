@@ -30,7 +30,7 @@ GLvoid timer(int);
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO, VBO, EBO;
+GLuint VAO[4], VBO[4], EBO[4];
 
 void make_vertex_shader();
 void make_fragment_shader();
@@ -43,11 +43,6 @@ GLclampf base_g = 0.0f;
 GLclampf base_b = 0.0f;
 GLint width{ 800 }, height{ 600 };
 
-struct f_shape :shape {
-    void update_buffer() {
-        
-    }
-};
 
 glm::vec3 light(0.0f, 0.0f, 3.0);
 bool light_on{ true };
@@ -69,11 +64,16 @@ float cz;
 float angle;
 
 
+shape pyramid{0.0, -2.0f, 0.0, "pyramid2.obj", sky_color};
+
+Model level[4];
 
 //------------------------------------------------------
 //필요한 함수 선언
 std::random_device(rd);
 std::mt19937 g(rd());
+void sierpinskiTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, int level, Model& model);
+void triangle(Model& model, int level);
 
 //------------------------------------------------------
 void main(int argc, char** argv) {
@@ -97,6 +97,10 @@ void main(int argc, char** argv) {
     glutTimerFunc(10, timer, 0);
     lo.gen_buffer();
     plane.gen_buffer();
+    for (int i = 0; i < 4; ++i) {
+        triangle(level[i], i + 1);
+    }
+    pyramid.gen_buffer();
 
 
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
@@ -187,6 +191,12 @@ GLvoid drawScene(GLvoid) {
     glUniform3fv(color, 1, glm::value_ptr(plane.color));
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(plane.trans));
     glDrawArrays(GL_TRIANGLES, 0, plane.model.vertices.size());
+
+    glBindVertexArray(pyramid.VAO);
+    pyramid.update_position();
+    glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+    glDrawArrays(GL_TRIANGLES, 0, pyramid.model.vertices.size());
 
     glutSwapBuffers();
 
@@ -300,4 +310,55 @@ GLvoid timer(int value) {
 
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);
+}
+
+
+void sierpinskiTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, int level, Model& model) {
+    if (level == 0) {
+        // 단계가 0이면 삼각형 추가
+        model.vertices.push_back({ v1.x, v1.y, v1.z });
+        model.vertices.push_back({ v2.x, v2.y, v2.z });
+        model.vertices.push_back({ v3.x, v3.y, v3.z });
+
+        // 노멀 계산
+        glm::vec3 edge1 = v2 - v1;
+        glm::vec3 edge2 = v3 - v1;
+        glm::vec3 n = glm::normalize(glm::cross(edge1, edge2));
+
+        // Normal 타입으로 변환 후 저장
+        glm::vec3 normal = { n.x, n.y, n.z };
+        model.nvectors.push_back(normal);
+        model.nvectors.push_back(normal);
+        model.nvectors.push_back(normal);
+    }
+    else {
+        // 중간점 계산
+        glm::vec3 mid1 = (v1 + v2) * 0.5f;
+        glm::vec3 mid2 = (v2 + v3) * 0.5f;
+        glm::vec3 mid3 = (v3 + v1) * 0.5f;
+
+        // 하위 삼각형 재귀 호출
+        sierpinskiTriangle(v1, mid1, mid3, level - 1, model);
+        sierpinskiTriangle(mid1, v2, mid2, level - 1, model);
+        sierpinskiTriangle(mid3, mid2, v3, level - 1, model);
+        sierpinskiTriangle(mid1, mid2, mid3, level - 1, model);
+    }
+}
+
+// 피라미드 생성 함수
+void triangle(Model& model, int level) {
+    // 초기 정점 설정 (피라미드의 꼭짓점과 바닥)
+    glm::vec3 top = { 0.0f, 0.5f, 0.0f };         // 피라미드 꼭짓점
+    glm::vec3 base1 = { -0.5f, 0.0f, -0.5f };    // 바닥 좌하단
+    glm::vec3 base2 = { 0.5f, 0.0f, -0.5f };     // 바닥 우하단
+    glm::vec3 base3 = { 0.5f, 0.0f, 0.5f };      // 바닥 우상단
+    glm::vec3 base4 = { -0.5f, 0.0f, 0.5f };     // 바닥 좌상단
+
+    // 시어핀스키 삼각형으로 각 면을 분할
+    sierpinskiTriangle(top, base1, base2, level, model); // 앞면
+    sierpinskiTriangle(top, base2, base3, level, model); // 오른쪽
+    sierpinskiTriangle(top, base3, base4, level, model); // 뒷면
+    sierpinskiTriangle(top, base4, base1, level, model); // 왼쪽
+    sierpinskiTriangle(base1, base2, base3, level, model); // 바닥 1
+    sierpinskiTriangle(base1, base3, base4, level, model); // 바닥 2
 }

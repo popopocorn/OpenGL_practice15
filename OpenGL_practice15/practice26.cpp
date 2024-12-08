@@ -216,9 +216,7 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
         cx -= 0.1f;
         break;
     case'y':
-
         light = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
-
         break;
 
     case'Y':
