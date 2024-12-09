@@ -12,6 +12,8 @@
 #include"shape.h"
 #include"crane.h"
 
+
+
 //미리 선언할거
 #define vertex_shader_code "26_Vertex_shader.glsl"
 #define fragment_shader_code "26_Fragment_shader.glsl"
@@ -30,7 +32,7 @@ GLvoid timer(int);
 GLuint shader_program;
 GLuint vertexShader;
 GLuint fragmentShader;
-GLuint VAO[4], VBO[4], EBO[4];
+GLuint VAO[4], VBO[4], NBO[4];
 
 void make_vertex_shader();
 void make_fragment_shader();
@@ -63,6 +65,7 @@ float cz;
 
 float angle;
 
+int p_level;
 
 shape pyramid{0.0, -2.0f, 0.0, "pyramid2.obj", sky_color};
 
@@ -120,7 +123,7 @@ GLvoid drawScene(GLvoid) {
     glValidateProgram(shader_program);
 
 
-    glEnable(GL_CULL_FACE);
+    //glEnable(GL_CULL_FACE);
 
 
 
@@ -192,11 +195,66 @@ GLvoid drawScene(GLvoid) {
     glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(plane.trans));
     glDrawArrays(GL_TRIANGLES, 0, plane.model.vertices.size());
 
-    glBindVertexArray(pyramid.VAO);
-    pyramid.update_position();
-    glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
-    glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
-    glDrawArrays(GL_TRIANGLES, 0, pyramid.model.vertices.size());
+    for (int i = 0; i < 5; ++i) {
+        if (p_level == 0) {
+            glBindVertexArray(pyramid.VAO);
+            pyramid.update_position();
+            glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+            glDrawArrays(GL_TRIANGLES, 0, pyramid.model.vertices.size());
+        }
+        else if (i > 0 && p_level==i) {
+            std::cout << level[i - 1].vertices.size() << std::endl;
+            glBindVertexArray(VAO[i]);
+            glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+            glDrawArrays(GL_TRIANGLES, 0, level[i-1].vertices.size());
+        }
+    }
+
+    switch (p_level)
+    {
+    case 0:
+        glBindVertexArray(pyramid.VAO);
+        pyramid.update_position();
+        glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+        glDrawArrays(GL_TRIANGLES, 0, pyramid.model.vertices.size());
+        break;
+
+    case 1:
+        glBindVertexArray(VAO[p_level - 1]);
+        glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+        glDrawArrays(GL_TRIANGLES, 0, level[p_level - 1].vertices.size());
+        break;
+
+    case 2:
+        
+        glBindVertexArray(VAO[p_level - 1]);
+        glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+        glDrawArrays(GL_TRIANGLES, 0, level[p_level - 1].vertices.size());
+        break;
+
+    case 3:
+        
+        glBindVertexArray(VAO[p_level - 1]);
+        glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+        glDrawArrays(GL_TRIANGLES, 0, level[p_level - 1].vertices.size());
+        break;
+
+    case 4:
+        
+        glBindVertexArray(VAO[p_level - 1]);
+        glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
+        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
+        glDrawArrays(GL_TRIANGLES, 0, level[p_level - 1].vertices.size());
+        break;
+    default:
+        break;
+    }
 
     glutSwapBuffers();
 
@@ -209,7 +267,35 @@ GLvoid Reshape(int w, int h) {
 }
 GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
+    case '0':
+        p_level = 0;
+        std::cout << p_level << std::endl;
+        std::cout << level[p_level - 1].vertices.size() << std::endl;
+        break;
+    case '1':
+        p_level = 1;
+        std::cout << p_level << std::endl;
+        std::cout << level[p_level - 1].vertices.size() << std::endl;
+        break;
+    case '2':
+        p_level = 2;
+        std::cout << level[p_level - 1].vertices.size() << std::endl;
+        break;
+    case '3':
+        p_level = 3;
+        std::cout << level[p_level - 1].vertices.size() << std::endl;
+        break;
+    case '4':
+        p_level = 4;
+        std::cout << level[p_level - 1].vertices.size() << std::endl;
+        break;
 
+    case 'r':
+        angle += 1.0f;
+        break;
+    case 'R':
+        angle -= 1.0f;
+        break;
     case 'q':
         glutLeaveMainLoop();
         break;
@@ -296,7 +382,24 @@ GLuint make_shader() {
 }
 
 GLvoid init_buffer() {
+    for (int i = 0; i < 4; ++i) {
+        glGenVertexArrays(1, &VAO[i]);
+        glBindVertexArray(VAO[i]);
 
+        glGenBuffers(1, &VBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, level[i].vertices.size() * sizeof(glm::vec3), level[i].vertices.data(), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glGenBuffers(1, &NBO[i]);
+        glBindBuffer(GL_ARRAY_BUFFER, NBO[i]);
+        glBufferData(GL_ARRAY_BUFFER, level[i].nvectors.size() * sizeof(glm::vec3), level[i].nvectors.data(), GL_STATIC_DRAW);
+
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(1);
+    }
 
 }
 GLvoid SpecialKeyboard(int key, int x, int y) {
@@ -315,21 +418,21 @@ GLvoid timer(int value) {
 
 void sierpinskiTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, int level, Model& model) {
     if (level == 0) {
-        // 단계가 0이면 삼각형 추가
-        model.vertices.push_back({ v1.x, v1.y, v1.z });
-        model.vertices.push_back({ v2.x, v2.y, v2.z });
-        model.vertices.push_back({ v3.x, v3.y, v3.z });
+        // 기본 삼각형 추가
+        model.vertices.push_back(v1);
+        model.vertices.push_back(v2);
+        model.vertices.push_back(v3);
+    //    std::cout << "(" << v1.x << ", " << v1.y << "), ("
+    //<< v2.x << ", " << v2.y << "), ("
+    //<< v3.x << ", " << v3.y << ")" << std::endl;
 
-        // 노멀 계산
+        // 노멀 계산 및 추가
         glm::vec3 edge1 = v2 - v1;
         glm::vec3 edge2 = v3 - v1;
-        glm::vec3 n = glm::normalize(glm::cross(edge1, edge2));
-
-        // Normal 타입으로 변환 후 저장
-        glm::vec3 normal = { n.x, n.y, n.z };
-        model.nvectors.push_back(normal);
-        model.nvectors.push_back(normal);
-        model.nvectors.push_back(normal);
+        glm::vec3 normal = glm::normalize(glm::cross(edge1, edge2));
+        for (int i = 0; i < 3; ++i) {
+            model.nvectors.push_back(normal);
+        }
     }
     else {
         // 중간점 계산
@@ -337,28 +440,35 @@ void sierpinskiTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec
         glm::vec3 mid2 = (v2 + v3) * 0.5f;
         glm::vec3 mid3 = (v3 + v1) * 0.5f;
 
-        // 하위 삼각형 재귀 호출
+        //std::cout << "(" << mid1.x << ", " << mid1.y << ", " << mid1.z << "), "
+        //    << "(" << mid2.x << ", " << mid2.y << ", " << mid2.z << "), "
+        //    << "(" << mid3.x << ", " << mid3.y << ", " << mid3.z << ")" << std::endl;
+
+
+
+        // 하위 삼각형 분할
         sierpinskiTriangle(v1, mid1, mid3, level - 1, model);
         sierpinskiTriangle(mid1, v2, mid2, level - 1, model);
         sierpinskiTriangle(mid3, mid2, v3, level - 1, model);
-        sierpinskiTriangle(mid1, mid2, mid3, level - 1, model);
     }
 }
 
+
 // 피라미드 생성 함수
 void triangle(Model& model, int level) {
+    std::cout << level;
     // 초기 정점 설정 (피라미드의 꼭짓점과 바닥)
     glm::vec3 top = { 0.0f, 0.5f, 0.0f };         // 피라미드 꼭짓점
-    glm::vec3 base1 = { -0.5f, 0.0f, -0.5f };    // 바닥 좌하단
-    glm::vec3 base2 = { 0.5f, 0.0f, -0.5f };     // 바닥 우하단
-    glm::vec3 base3 = { 0.5f, 0.0f, 0.5f };      // 바닥 우상단
-    glm::vec3 base4 = { -0.5f, 0.0f, 0.5f };     // 바닥 좌상단
-
+    glm::vec3 base1 = { -0.5f, -0.5f, 0.5f };    // 바닥 좌하단
+    glm::vec3 base2 = { 0.5f, -0.5f, 0.5f };     // 바닥 우하단
+    glm::vec3 base3 = { 0.5f, -0.5f, -0.5f };      // 바닥 우상단
+    glm::vec3 base4 = { -0.5f, -0.5f, -0.5f };     // 바닥 좌상단
     // 시어핀스키 삼각형으로 각 면을 분할
     sierpinskiTriangle(top, base1, base2, level, model); // 앞면
     sierpinskiTriangle(top, base2, base3, level, model); // 오른쪽
     sierpinskiTriangle(top, base3, base4, level, model); // 뒷면
     sierpinskiTriangle(top, base4, base1, level, model); // 왼쪽
-    sierpinskiTriangle(base1, base2, base3, level, model); // 바닥 1
-    sierpinskiTriangle(base1, base3, base4, level, model); // 바닥 2
 }
+
+
+
