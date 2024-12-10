@@ -15,9 +15,12 @@
 
 
 //미리 선언할거
-#define vertex_shader_code "26_Vertex_shader.glsl"
-#define fragment_shader_code "26_Fragment_shader.glsl"
-
+#define vertex_shader_code "30_Vertex_shader.glsl"
+#define fragment_shader_code "30_Fragment_shader.glsl"
+std::random_device(rd);
+std::mt19937 g(rd());
+std::uniform_real_distribution<float> dist(-5.0f, 5.0f);
+std::uniform_real_distribution<float> dist2(0.3f, 1.5f);
 //------------------------------------------------------
 //콜백함수
 
@@ -46,7 +49,7 @@ GLclampf base_b = 0.0f;
 GLint width{ 800 }, height{ 600 };
 
 
-glm::vec3 light(0.0f, 0.0f, 3.0);
+glm::vec3 light(0.0f, 2.0f, -3.0);
 bool light_on{ true };
 glm::vec3 lc(0.7f, 0.7f, 0.7f);
 glm::vec3 light_color(0.7f, 0.7f, 0.7f);
@@ -67,14 +70,102 @@ float angle;
 
 int p_level;
 
-shape pyramid{0.0, -2.0f, 0.0, "pyramid2.obj", sky_color};
+int light_loc;
+
+bool flag_snow;
+
+bool is_glass;
+
+shape pyramid{0.0, -1.5f, 0.0, "pyramid2.obj", sky_color};
+
+shape snow[] = {
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+    shape{dist(g), 5.0f, dist(g), "sphere2.obj", white_color},
+ 
+
+};
+
+shape tower[] = {
+    shape(dist(g), -1.5f, dist(g), "cube1.obj", purple_color),
+    shape(dist(g), -1.5f, dist(g), "cube1.obj", purple_color),
+    shape(dist(g), -1.5f, dist(g), "cube1.obj", purple_color),
+    shape(dist(g), -1.5f, dist(g), "cube1.obj", purple_color),
+    shape(dist(g), -1.5f, dist(g), "cube1.obj", purple_color),
+
+};
 
 Model level[4];
 
 //------------------------------------------------------
 //필요한 함수 선언
-std::random_device(rd);
-std::mt19937 g(rd());
+
 void sierpinskiTriangle(const glm::vec3& v1, const glm::vec3& v2, const glm::vec3& v3, int level, Model& model);
 void triangle(Model& model, int level);
 
@@ -104,7 +195,20 @@ void main(int argc, char** argv) {
         triangle(level[i], i + 1);
     }
     pyramid.gen_buffer();
+    for (shape& s : snow) {
+        s.gen_buffer();
+        s.scale_x = 0.1f;
+        s.scale_y = 0.1f;
+        s.scale_z = 0.1f;
+        s.dy = -(float(g() % 5 + 1) / 100.0);
+    }
 
+    for (shape& t : tower) {
+        t.gen_buffer();
+        t.scale_x = dist2(g);
+        t.scale_y = dist2(g);
+        t.scale_z = dist2(g);
+    }
 
     glEnable(GL_DEPTH_TEST);  // 깊이 테스트 활성화
     init_buffer();
@@ -147,9 +251,12 @@ GLvoid drawScene(GLvoid) {
     camera_trans = glm::translate(camera_trans, glm::vec3(cx, cy, cz - 10.0f));
     camera_trans = glm::rotate(camera_trans, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
     view *= camera_trans;
-
+    
+    glm::mat4 ct(1.0f);
+    ct = glm::translate(ct, glm::vec3(cx, cy, cz + 10.0f));
+    ct = glm::rotate(ct, glm::radians(angle), glm::vec3(0.0f, 1.0f, 0.0f));
     after_pos = glm::vec3(
-        camera_trans * glm::vec4(camera_pos, 1.0f)
+        ct * glm::vec4(camera_pos, 1.0f)
     );
     GLuint view_mat = glGetUniformLocation(shader_program, "view");
     glUniformMatrix4fv(view_mat, 1, GL_FALSE, glm::value_ptr(view));
@@ -169,7 +276,10 @@ GLvoid drawScene(GLvoid) {
     GLuint trans_mat2 = glGetUniformLocation(shader_program, "model2");
     GLuint color = glGetUniformLocation(shader_program, "color");
     GLuint light_switch = glGetUniformLocation(shader_program, "light_on");
+    GLuint gl = glGetUniformLocation(shader_program, "glass");
     glUniform1i(light_switch, light_on);
+    is_glass = false;
+    glUniform1i(gl, is_glass);
     /*glBindVertexArray(shape.VAO);
     shape.update_position();
     glUniform3fv(color, 1, glm::value_ptr(shape.color));
@@ -204,7 +314,7 @@ GLvoid drawScene(GLvoid) {
             glDrawArrays(GL_TRIANGLES, 0, pyramid.model.vertices.size());
         }
         else if (i > 0 && p_level==i) {
-            std::cout << level[i - 1].vertices.size() << std::endl;
+
             glBindVertexArray(VAO[i]);
             glUniform3fv(color, 1, glm::value_ptr(pyramid.color));
             glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(pyramid.trans));
@@ -256,6 +366,30 @@ GLvoid drawScene(GLvoid) {
         break;
     }
 
+    if(flag_snow){
+        for (shape& s : snow) {
+            glBindVertexArray(s.VAO);
+            s.update_position();
+            glUniform3fv(color, 1, glm::value_ptr(s.color));
+            glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(s.trans));
+            glDrawArrays(GL_TRIANGLES, 0, s.model.vertices.size());
+        }
+    }
+
+    //glDepthMask(GL_FALSE);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    for (shape& t : tower) {
+        glBindVertexArray(t.VAO);
+        is_glass = true;
+        glUniform1i(gl, is_glass);
+        t.update_position();
+        glUniform3fv(color, 1, glm::value_ptr(t.color));
+        glUniformMatrix4fv(trans_mat, 1, GL_FALSE, glm::value_ptr(t.trans));
+        glDrawArrays(GL_TRIANGLES, 0, t.model.vertices.size());
+    }
+    //glDepthMask(GL_TRUE);
     glutSwapBuffers();
 
 }
@@ -269,31 +403,119 @@ GLvoid Keyboard(unsigned char key, int x, int y) {
     switch (key) {
     case '0':
         p_level = 0;
-        std::cout << p_level << std::endl;
-        std::cout << level[p_level - 1].vertices.size() << std::endl;
+
         break;
     case '1':
         p_level = 1;
-        std::cout << p_level << std::endl;
-        std::cout << level[p_level - 1].vertices.size() << std::endl;
+
         break;
     case '2':
         p_level = 2;
-        std::cout << level[p_level - 1].vertices.size() << std::endl;
+
         break;
     case '3':
         p_level = 3;
-        std::cout << level[p_level - 1].vertices.size() << std::endl;
+
         break;
     case '4':
         p_level = 4;
-        std::cout << level[p_level - 1].vertices.size() << std::endl;
+
+        break;
+    case 'r':
+        light = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
         break;
 
-    case 'r':
+    case'R':
+
+        light = glm::vec3(glm::rotate(glm::mat4(1.0f), glm::radians(-3.0f), glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(light, 1.0f));
+
+        break;
+
+    case'n':
+    {
+        glm::vec3 dir = glm::normalize(after_pos - light);
+        light += dir * 0.1f;
+    }
+        //camera_pos.x += 0.5;
+        //mother.x += 0.1f;
+        break;
+
+    case'f':
+    {
+        glm::vec3 dir = glm::normalize(after_pos - light);
+        light -= dir * 0.1f;
+    }
+        //camera_pos.x -= 0.5;
+        //mother.x -= 0.1f;
+        break;
+
+    case '+':
+        light_color.x += 0.1f;
+        light_color.y += 0.1f;
+        light_color.z += 0.1f;
+        break;
+    case '-':
+        light_color.x -= 0.1f;
+        light_color.y -= 0.1f;
+        light_color.z -= 0.1f;
+        break;
+
+    case 's':
+        flag_snow = !flag_snow;
+
+        break;
+
+    case 'm':
+        light_on = !light_on;
+        break;
+
+    case 'c':
+        light_color = brown_color;
+
+        break;
+
+    case 'v':
+        light_color = lc;
+
+        break;
+
+    case 'b':
+        light_color = sky_color;
+
+        break;
+    case 'p':
+        ++light_loc;
+        if (light_loc > 3) {
+            light_loc = 0;
+        }
+        switch (light_loc)
+        {
+        case 0:
+            light = glm::vec3(1, 0, 0);
+            break;
+
+        case 1:
+            light = glm::vec3(-1, 0, 0);
+            break;
+
+        case 2:
+            light = glm::vec3(0, 0, 1);
+            break;
+
+        case 3:
+            light = glm::vec3(0, 0, -1);
+            break;
+
+
+        default:
+            break;
+        }
+        break;
+
+    case 'y':
         angle += 1.0f;
         break;
-    case 'R':
+    case 'Y':
         angle -= 1.0f;
         break;
     case 'q':
@@ -408,8 +630,17 @@ GLvoid SpecialKeyboard(int key, int x, int y) {
 }
 
 GLvoid timer(int value) {
+    for (shape& s : snow) {
+        s.y += s.dy;
+        if (s.y < -2.0) {
+            s.y = 5.0f;
+        }
+    }
 
 
+    lo.x = light.x;
+    lo.y = light.y;
+    lo.z = light.z;
 
     glutPostRedisplay();
     glutTimerFunc(10, timer, 0);
@@ -468,6 +699,13 @@ void triangle(Model& model, int level) {
     sierpinskiTriangle(top, base2, base3, level, model); // 오른쪽
     sierpinskiTriangle(top, base3, base4, level, model); // 뒷면
     sierpinskiTriangle(top, base4, base1, level, model); // 왼쪽
+
+    model.vertices.push_back(base1);
+    model.vertices.push_back(base2);
+    model.vertices.push_back(base3);
+    model.vertices.push_back(base1);
+    model.vertices.push_back(base3);
+    model.vertices.push_back(base4);
 }
 
 

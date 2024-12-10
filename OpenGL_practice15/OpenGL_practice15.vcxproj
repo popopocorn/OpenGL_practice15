@@ -199,7 +199,9 @@
     <ClCompile Include="practice26.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="practice27.cpp" />
+    <ClCompile Include="practice27.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="practice4.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
@@ -284,6 +286,8 @@
     <None Include="25_Fragment_shader.glsl" />
     <None Include="26_Fragment_shader.glsl" />
     <None Include="26_Vertex_shader.glsl" />
+    <None Include="30_Fragment_shader.glsl" />
+    <None Include="30_Vertex_shader.glsl" />
     <None Include="middle_Fragment_shader.glsl" />
     <None Include="middle_Vertex_shader.glsl" />
   </ItemGroup>
